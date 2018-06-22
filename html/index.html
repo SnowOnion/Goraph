@@ -12,23 +12,72 @@
             return [x, y];
         }
 
-        function addClickHandler() {
-            var canvas = document.getElementById('canvas');
-            var rect = canvas.getBoundingClientRect();
+        var global = {
+            next: 1,
+            flip: function () {
+                global.next = 3 - global.next; // hmmm use "this"?
+                var nextDom = document.getElementById("next");
+                nextDom.innerHTML = global.next === 1 ? "黑" : "白";
+            }
+        };
 
+        function init() {
+            drawAccordingToStatus();
+
+            var canvas = document.getElementById('canvas');
+            // alert("Touching screen DOES emit mousedown. But, standard-compliant? ( ﾟ∀。)");
             canvas.addEventListener("mousedown", function (e) {
-//                alert("touch is ok. but is it standard-compliant? ( ﾟ∀。)");
                 var x, y;
                 [x, y] = getCursorPosition(canvas, e);
-                console.log(x, y, e.clientX, e.clientY, rect.left, rect.top)
-                console.log(canvas.width, canvas.height, canvas.scrollWidth, canvas.scrollHeight)
+                // n for normalized. 还是想转成棋盘的原位置数据来做计算。
+                var xn = x / canvas.scrollWidth * canvas.width,
+                    yn = y / canvas.scrollHeight * canvas.height;
+//                console.log(xn,yn)
+
+                // n for both nearest / node
+                var nid = findNearestNodeID(xn, yn);
+                if (notOccupied(nid) && validWrtRule(nid)) {
+                    gameStatus[nid] = global.next;
+                    global.flip();
+                    drawAccordingToStatus();
+                    infoLog();
+                } else {
+                    infoLog("这一手不合规则");
+                }
 
 
-                var rid = Math.floor(Math.random() * 8);
-                var rcolor = Math.floor(Math.random() * 3) ;
-                gameStatus[rid] = rcolor;
-                drawAccordingToStatus();
             });
+        }
+
+        function findNearestNodeID(xn, yn) {
+            var dSquare = Number.MAX_VALUE,
+                result;
+            for (var id in positionedNodes) {
+                var x = positionedNodes[id].x,
+                    y = positionedNodes[id].y,
+                    newDSquare = (x - xn) * (x - xn) + (y - yn) * (y - yn);
+                if (newDSquare < dSquare) {
+                    dSquare = newDSquare;
+                    result = id;
+                }
+            }
+            return result;
+        }
+
+        function notOccupied(nodeID) {
+            return gameStatus[nodeID] === 0;
+        }
+
+        /**
+         * Interface for different rules (Chinese, Japanese,...)
+         *
+         * 中国规则：禁止全盘同形再现（蕴含了打劫规则？）
+         *
+         * 日本规则：TODO
+         *
+         * */
+        function validWrtRule(nodeID) {
+            return true; // TODO impl
         }
 
         /**
@@ -61,12 +110,12 @@
 
         var gameStatus = {
             0: 0,
-            1: 1,
-            2: 2,
-            3: 2,
-            4: 1,
+            1: 0,
+            2: 0,
+            3: 0,
+            4: 0,
             5: 0,
-            6: 2,
+            6: 0,
             7: 0
         };
 
@@ -75,13 +124,13 @@
          * 只从小 id 向大 id 画线，避免画两遍；
          */
         function drawBoard(ctx) {
-            for (id1 in positionedNodes) {
+            for (var id1 in positionedNodes) {
                 var x1 = positionedNodes[id1].x,
                     y1 = positionedNodes[id1].y;
                 drawLittleBlack(x1, y1);
-                ;
-                for (j in adj0[id1]) {
-                    id2 = adj0[id1][j];
+
+                for (var j in adj0[id1]) {
+                    var id2 = adj0[id1][j];
                     if (id1 <= id2) {
                         var x2 = positionedNodes[id2].x,
                             y2 = positionedNodes[id2].y;
@@ -89,7 +138,6 @@
                     }
                 }
             }
-
 
             /**
              * 嵌套定义 function 提升出去什么的……看看 TODO
@@ -140,6 +188,16 @@
             }
         }
 
+        /**
+         *
+         * @param msg No argument = clear
+         */
+        function infoLog(msg) {
+            msg = msg || "　";
+            var info = document.getElementById('info');
+            info.innerHTML = msg;
+        }
+
     </script>
 
     <style>
@@ -151,17 +209,24 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        #restart {
-
-        }
     </style>
 
 </head>
-<body onload="(function(){drawAccordingToStatus();addClickHandler()})()">
+<body onload="init()">
 <!--妙啊，html 里 width height 规定画布大小，css 里 width height 规定缩放。这符合标准吗？-->
 <canvas id="canvas" width="1000" height="1000"></canvas>
 
 <button id="restart">重新开始</button>
+<button id="pass">放弃一手</button>
+<!--3、 双方连续使用虚着，为终局。-->
 <p>下一手：<span id="next">黑</span>棋</p>
+<p id="info">请点击或触摸下棋</p>
+
+<p>TODO:</p>
+<ol>
+    <li>中国规则的禁止全局同形</li>
+    <li>自动数子和贴目配置</li>
+    <li>人工智能（zhang）对手</li>
+</ol>
 </body>
 </html>
