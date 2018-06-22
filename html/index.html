@@ -6,24 +6,29 @@
 
         // https://stackoverflow.com/a/18053642/2801663
         function getCursorPosition(canvas, event) {
-
             var rect = canvas.getBoundingClientRect();
             var x = event.clientX - rect.left;
             var y = event.clientY - rect.top;
-            console.log("x: " + x + " y: " + y);
+            return [x, y];
         }
 
         function addClickHandler() {
             var canvas = document.getElementById('canvas');
+            var rect = canvas.getBoundingClientRect();
 
-            console.log("canvas!!!");
             canvas.addEventListener("mousedown", function (e) {
 //                alert("touch is ok. but is it standard-compliant? ( ﾟ∀。)");
-                console.log(e);
-                getCursorPosition(canvas, e);
+                var x, y;
+                [x, y] = getCursorPosition(canvas, e);
+                console.log(x, y, e.clientX, e.clientY, rect.left, rect.top)
+                console.log(canvas.width, canvas.height, canvas.scrollWidth, canvas.scrollHeight)
+
+
+                var rid = Math.floor(Math.random() * 8);
+                var rcolor = Math.floor(Math.random() * 3) ;
+                gameStatus[rid] = rcolor;
+                drawAccordingToStatus();
             });
-
-
         }
 
         /**
@@ -54,34 +59,43 @@
             7: {x: 750, y: 750}
         };
 
+        var gameStatus = {
+            0: 0,
+            1: 1,
+            2: 2,
+            3: 2,
+            4: 1,
+            5: 0,
+            6: 2,
+            7: 0
+        };
+
         /**
          * 结点画个小黑圆点；
          * 只从小 id 向大 id 画线，避免画两遍；
          */
-        function drawBoard() {
-            var canvas = document.getElementById('canvas');
-            if (canvas.getContext) {
-                var ctx = canvas.getContext('2d');
-
-                for (id1 in positionedNodes) {
-                    var x1 = positionedNodes[id1].x,
-                        y1 = positionedNodes[id1].y;
-                    drawLittleBlack(x1, y1);
-                    for (j in adj0[id1]) {
-                        id2 = adj0[id1][j];
-                        if (id1 <= id2) {
-                            var x2 = positionedNodes[id2].x,
-                                y2 = positionedNodes[id2].y;
-                            drawLine(x1, y1, x2, y2);
-                        }
+        function drawBoard(ctx) {
+            for (id1 in positionedNodes) {
+                var x1 = positionedNodes[id1].x,
+                    y1 = positionedNodes[id1].y;
+                drawLittleBlack(x1, y1);
+                ;
+                for (j in adj0[id1]) {
+                    id2 = adj0[id1][j];
+                    if (id1 <= id2) {
+                        var x2 = positionedNodes[id2].x,
+                            y2 = positionedNodes[id2].y;
+                        drawLine(x1, y1, x2, y2);
                     }
                 }
             }
+
 
             /**
              * 嵌套定义 function 提升出去什么的……看看 TODO
              */
             function drawLine(x1, y1, x2, y2) {
+                ctx.fillStyle = "black";
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
@@ -89,13 +103,40 @@
             }
 
             function drawLittleBlack(x, y) {
+                ctx.fillStyle = "black";
                 ctx.beginPath();
                 ctx.arc(x, y, 3, 0, Math.PI * 2);
                 ctx.fill();
             }
+        }
 
-            function drawStone() {
+        function drawAccordingToStatus() {
+            var canvas = document.getElementById('canvas');
+            if (canvas.getContext) {
+                var ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawBoard(ctx);
+                for (id in gameStatus) {
+                    if (gameStatus[id] !== 0) {
+                        var x = positionedNodes[id].x,
+                            y = positionedNodes[id].y,
+                            colorNum = gameStatus[id];
+                        drawStone(x, y, colorNum);
+                    }
+                }
+            }
 
+            /**
+             * @param colorEnum 1 black, 2 white 无防御
+             */
+            function drawStone(x, y, colorEnum) {
+                ctx.fillStyle = colorEnum === 1 ? "black" : "white";
+                ctx.beginPath();
+                ctx.arc(x, y, 25, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "black";
+                ctx.arc(x, y, 25, 0, Math.PI * 2);
+                ctx.stroke();
             }
         }
 
@@ -110,13 +151,13 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        #restart{
+        #restart {
 
         }
     </style>
 
 </head>
-<body onload="(function(){drawBoard();addClickHandler()})()">
+<body onload="(function(){drawAccordingToStatus();addClickHandler()})()">
 <!--妙啊，html 里 width height 规定画布大小，css 里 width height 规定缩放。这符合标准吗？-->
 <canvas id="canvas" width="1000" height="1000"></canvas>
 
