@@ -15,7 +15,7 @@ const adj0 = {
 /**
  * 游戏状态又与棋盘形状无关……
  */
-const positionedNodes = {
+const positions0 = {
     0: {x: 250, y: 250},
     1: {x: 500, y: 250},
     2: {x: 750, y: 250},
@@ -28,41 +28,44 @@ const positionedNodes = {
 
 let global, gameStatus, stoneStrings;
 
-/**
- * stone string id -> {chiSet: Set<node id>; nodes: Set<node id>}
- * Damn JS type system
- * @type {{}}
- */
-stoneStrings = {};
-gameStatus = {
-    0: {s: 0, stoneStringID: null},
-    1: {s: 0, stoneStringID: null},
-    2: {s: 0, stoneStringID: null},
-    3: {s: 0, stoneStringID: null},
-    4: {s: 0, stoneStringID: null},
-    5: {s: 0, stoneStringID: null},
-    6: {s: 0, stoneStringID: null},
-    7: {s: 0, stoneStringID: null}
-};
-global = {
-    next: 1,
-    oppoColor: function (myColor) {
-        return 3 - myColor;
-    },
-    isEmpty: function (color) {
-        return color === 0;
-    },
-    flip: function () {
-        this.next = this.oppoColor(this.next); // hmmm use "this"?
-        let nextDom = document.getElementById("next");
-        nextDom.innerHTML = this.next === 1 ? "黑" : "白";
-    },
-    _nextStoneStringID: 0,
-    nextStoneStringID: function () {
-        return this._nextStoneStringID++;
-    }
-};
+function initData() {
+    delete stoneStrings;
+    delete gameStatus;
+    delete global;
 
+    /**
+     * stone string id -> {chiSet: Set<node id>; nodes: Set<node id>}
+     * Damn JS type system
+     * @type {{}}
+     */
+    stoneStrings = {};
+    gameStatus = {
+        0: {s: 0, stoneStringID: null},
+        1: {s: 0, stoneStringID: null},
+        2: {s: 0, stoneStringID: null},
+        3: {s: 0, stoneStringID: null},
+        4: {s: 0, stoneStringID: null},
+        5: {s: 0, stoneStringID: null},
+        6: {s: 0, stoneStringID: null},
+        7: {s: 0, stoneStringID: null}
+    };
+    global = {
+        next: 1,
+        oppoColor: function (myColor) {
+            return 3 - myColor;
+        },
+        isEmpty: function (color) {
+            return color === 0;
+        },
+        flip: function () {
+            this.next = this.oppoColor(this.next); // hmmm use "this"?
+        },
+        _nextStoneStringID: 0,
+        nextStoneStringID: function () {
+            return this._nextStoneStringID++;
+        }
+    };
+}
 
 function init() {
     initData();
@@ -90,9 +93,6 @@ function init() {
 
     });
 
-    function initData() {
-
-    }
 
     // https://stackoverflow.com/a/18053642/2801663
     function getCursorPosition(canvas, event) {
@@ -106,8 +106,8 @@ function init() {
     function findNearestNodeID(xn, yn) {
         let dSquare = Number.MAX_VALUE,
             result;
-        for (let id in positionedNodes) {
-            let pNode = positionedNodes[id];
+        for (let id in positions0) {
+            let pNode = positions0[id];
             let x = pNode.x,
                 y = pNode.y,
                 newDSquare = (x - xn) * (x - xn) + (y - yn) * (y - yn);
@@ -120,7 +120,11 @@ function init() {
     }
 }
 
+
 function drawAccordingToStatus() {
+    let nextDom = document.getElementById("next");
+    nextDom.innerHTML = global.next === 1 ? "黑" : "白";
+
     let canvas = document.getElementById('canvas');
     let ctx = canvas.getContext('2d');
     if (canvas.getContext) {
@@ -128,8 +132,8 @@ function drawAccordingToStatus() {
         drawBoard(ctx);
         for (let id in gameStatus) {
             if (gameStatus[id].s !== 0) {
-                let x = positionedNodes[id].x,
-                    y = positionedNodes[id].y,
+                let x = positions0[id].x,
+                    y = positions0[id].y,
                     color = gameStatus[id].s;
                 drawStone(x, y, color);
             }
@@ -141,15 +145,15 @@ function drawAccordingToStatus() {
      * 只从小 id 向大 id 画线，避免画两遍；
      */
     function drawBoard(ctx) {
-        for (let id1 in positionedNodes) {
-            let x1 = positionedNodes[id1].x,
-                y1 = positionedNodes[id1].y;
+        for (let id1 in positions0) {
+            let x1 = positions0[id1].x,
+                y1 = positions0[id1].y;
             drawLittleBlack(x1, y1);
 
             for (let id2 of adj0[id1]) {
                 if (id1 <= id2) {
-                    let x2 = positionedNodes[id2].x,
-                        y2 = positionedNodes[id2].y;
+                    let x2 = positions0[id2].x,
+                        y2 = positions0[id2].y;
                     drawLine(x1, y1, x2, y2);
                 }
             }
@@ -202,7 +206,9 @@ function infoLog(msg) {
 }
 
 function restart() {
-
+    initData();
+    drawAccordingToStatus();
+    infoLog();
 }
 
 function pass() {
