@@ -5,6 +5,10 @@ Goraph := Game of **Go** on arbitrary [planar g**raph**](https://en.wikipedia.or
 
 任意平面图上的围棋游戏。
 
+# Techniques
+
+没有使用“现代前端技术”（`<canvas>` 算吗？）。
+
 # Naming
 
 取名 Goraph 是比较悍然的，因为至少有三个东西叫 Goraph 了：
