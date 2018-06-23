@@ -212,8 +212,6 @@ function pass() {
 }
 
 
-
-
 function notOccupied(nodeID) {
     return gameStatus[nodeID].s === 0;
 }
@@ -335,7 +333,7 @@ function affectOpponents(nodeID, newStoneColor, neighborOppoSSs) {
     for (let ssid of neighborOppoSSs) {
         stoneStrings[ssid].chiSet.delete(nodeID);
         if (stoneStrings[ssid].chiSet.size === 0) {
-            removeStoneString(nodeID, ssid, global.oppoColor(newStoneColor));
+            removeStoneString(ssid, global.oppoColor(newStoneColor));
             delete stoneStrings[ssid];
         }
     }
@@ -347,11 +345,11 @@ function affectOpponents(nodeID, newStoneColor, neighborOppoSSs) {
  *
  * 这个气维护，跟重新数一遍相比，哪个快？TODO
  *
- * @param removedNID
+ * @param newNodeID
  * @param ssidToRemove SSID to remove
  * @param colorToRemove 也能从全局状态里获取，但是麻烦，直接传进来好了
  */
-function removeStoneString(removedNID, ssidToRemove, colorToRemove) {
+function removeStoneString(ssidToRemove, colorToRemove) {
     // 对每个提掉的子
     stoneStrings[ssidToRemove].nodes.forEach(function (nid) {
         // 自己安排好
@@ -369,7 +367,9 @@ function removeStoneString(removedNID, ssidToRemove, colorToRemove) {
         });  // neighborOppoSSs OK
 
         neighborOppoSSs.forEach(function (ssid) {
-            stoneStrings[ssid].chiSet.add(removedNID);
+            // Bug was here: 成了把新落子加进气集合
+            // 类型是人类的好朋友：想在编译阶段区分 这个nid 那个nid。希望是真最后 bug
+            stoneStrings[ssid].chiSet.add(nid);
         });
 
     });
