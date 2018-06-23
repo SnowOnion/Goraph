@@ -11,8 +11,8 @@ let global = {
     oppoColor: function (myColor) {
         return 3 - myColor;
     },
-    isEmpty: function (colorNum) {
-        return colorNum === 0;
+    isEmpty: function (color) {
+        return color === 0;
     },
     flip: function () {
         this.next = this.oppoColor(this.next); // hmmm use "this"?
@@ -26,7 +26,7 @@ let global = {
 };
 
 /**
- * stone string id -> {chi: int; chiSet: [node id]; nodes:[node id]}
+ * stone string id -> {chiSet: Set<node id>; nodes: Set<node id>}
  * Damn JS type system
  * @type {{}}
  */
@@ -57,7 +57,7 @@ function init() {
 
         // n for both nearest / node
         let nid = findNearestNodeID(xn, yn);
-        console.log("before update", nid, gameStatus, stoneStrings);
+        // console.log("before update", nid, gameStatus, stoneStrings);
         if (notOccupied(nid) && validWrtRuleAndUpdate(nid, global.next)) {
             global.flip();
             drawAccordingToStatus();
@@ -118,54 +118,122 @@ let adj0 = {
     7: [4, 6]
 };
 
-function findDistinctNeighborSSs(nodeID, colorNum) {
-    // 先找出所有 distinct 邻居棋串（避免对同一棋串重复操作），按敌我分开；
+function findNeighborSSnChi(nodeID, color) {
+    // 先找出所有 distinct 邻居棋串（避免对同一棋串重复操作），按敌我分开；也同时算出直接的气数
     // SS for stone string
-    let neighborMySSs = [], neighborOppoSSs = [];
+    let neighborMySSs = new Set(), neighborOppoSSs = new Set();
+    let directChi = 0;
     for (let nid of adj0[nodeID]) {
         let neighborColor = gameStatus[nid].s,
             neighborSSID = gameStatus[nid].stoneStringID;
-        if (colorNum === neighborColor) {
-            if (!(neighborSSID in neighborMySSs)) {
-                neighborMySSs.push(neighborSSID);
-            }
-        } else if (colorNum === global.oppoColor(neighborColor)) {
-            if (!(neighborSSID in neighborOppoSSs)) {
-                neighborOppoSSs.push(neighborSSID);
-            }
+        if (color === neighborColor) {
+            neighborMySSs.add(neighborSSID);
+        } else if (color === global.oppoColor(neighborColor)) {
+            neighborOppoSSs.add(neighborSSID);
+
         } else {
             // empty neighborhood
+            directChi++;
         }
     }
-    return [neighborMySSs, neighborOppoSSs];
+    return [[...neighborMySSs], [...neighborOppoSSs], directChi];
 }
 
-function maybeRemoveOpponents(nodeID, neighborOppoSSs, myColorNum) {
-    // 邻居敌方各棋串气 -=1。若有气 =0 者，逐个提子()——有提子就不会回滚
+/**
+ * // 邻居敌方各棋串气集 -= 新落子。若有气 =0 者，逐个提子；提子使敌方的敌方邻居气集增员……
+ *
+ * @param nodeID
+ * @param neighborOppoSSs
+ * @param newStoneColor 新落子的颜色，与现在要提走的子儿的相反
+ */
+function affectOpponents(nodeID, newStoneColor, neighborOppoSSs) {
     for (let ssid of neighborOppoSSs) {
-        stoneStrings[ssid].chiSet.splice(stoneStrings[ssid].chiSet.indexOf(nodeID), 1);
-        if (stoneStrings[ssid].chiSet.length === 0) {
-            removeStoneString(ssid, global.oppoColor(myColorNum));
+        stoneStrings[ssid].chiSet.delete(nodeID);
+        if (stoneStrings[ssid].chiSet.size === 0) {
+            removeStoneString(nodeID, ssid, global.oppoColor(newStoneColor));
+            delete stoneStrings[ssid];
         }
     }
 }
 
-function calculateNewSingleStoneChiSet(nodeID) {
-    // 在提掉敌子（如果能）后，计算新落子自己的气集合
-    let myChiSet = [];
-    for (let nid of adj0[nodeID]) {
+/**
+ *
+ * 提掉 ssidToRemove 所示的棋串的所有子
+ *
+ * 这个气维护，跟重新数一遍相比，哪个快？TODO
+ *
+ * @param removedNID
+ * @param ssidToRemove SSID to remove
+ * @param colorToRemove 也能从全局状态里获取，但是麻烦，直接传进来好了
+ */
+function removeStoneString(removedNID, ssidToRemove, colorToRemove) {
+    // 对每个提掉的子
+    stoneStrings[ssidToRemove].nodes.forEach(function (nid) {
+        // 自己安排好
+        gameStatus[nid].s = 0;
+        gameStatus[nid].stoneStringID = null;
+
+        // 影响到的敌（敌の敌）邻棋串
+        let neighborOppoSSs = new Set(); // oppo 指 colorToRemove 所示颜色的对手
+        adj0[nid].filter(function (nidToAddChi) {
+            let neighborColor = gameStatus[nidToAddChi].s;
+            return colorToRemove === global.oppoColor(neighborColor);
+        }).forEach(function (nidToAddChi) {
+            let neighborSSID = gameStatus[nidToAddChi].stoneStringID;
+            neighborOppoSSs.add(neighborSSID);
+        });  // neighborOppoSSs OK
+
+        neighborOppoSSs.forEach(function (ssid) {
+            stoneStrings[ssid].chiSet.add(removedNID);
+        });
+
+    });
+}
+
+/**
+ * 在提掉敌子前，计算新落子自己的气集合
+ * @param nodeID
+ * @returns {Set}
+ */
+function calcNewStoneChiSet(nodeID) {
+    return new Set(adj0[nodeID].filter(function (nid) {
         let neighborColor = gameStatus[nid].s;
-        if (global.isEmpty(neighborColor)) {
-            myChiSet.push(nid);
+        return global.isEmpty(neighborColor);
+    }));
+}
+
+function buildOrMergeSS(nodeID, color, neighborMySSs) {
+    // 两种情形都要做的事情
+    let newStoneChiSet = calcNewStoneChiSet(nodeID);
+    let newSSID = global.nextStoneStringID();
+    gameStatus[nodeID].s = color;
+    gameStatus[nodeID].stoneStringID = newSSID;
+
+    // 无我方邻居棋串，则新建棋串
+    if (neighborMySSs.length === 0) {
+        stoneStrings[newSSID] = {chiSet: newStoneChiSet, nodes: new Set([nodeID])};
+    } else {// 有我方邻居棋串，则合并相邻的我方 n(>0) 个棋串
+        let newNodeSet = new Set([nodeID]), newChiSet = new Set(newStoneChiSet);
+        for (let ssid of neighborMySSs) {
+            stoneStrings[ssid].nodes.forEach(function (nidOfExistingFriend) {
+                // Last (hope so) graph algorithm bug here: `nidOfExistingFriend` was `ele` then, and I did `gameStatus[ele].s = color;`. 成了给黑子涂黑色。
+                newNodeSet.add(nidOfExistingFriend);
+                gameStatus[nidOfExistingFriend].stoneStringID = newSSID;
+            });
+            stoneStrings[ssid].chiSet.forEach(function (chiEle) {
+                newChiSet.add(chiEle)
+            });
+            delete stoneStrings[ssid];
         }
+        newChiSet.delete(nodeID);
+        // newNodeSet, newChiSet OK
+
+        stoneStrings[newSSID] = {chiSet: newChiSet, nodes: newNodeSet};
     }
-    return myChiSet;
 }
 
 /**
  * If this move is valid, update data, else keep the data as is and return null
- *
- * see doc/chi.txt
  *
  * Interface for different rules (Chinese, Japanese,...)
  *
@@ -173,103 +241,37 @@ function calculateNewSingleStoneChiSet(nodeID) {
  * 日本规则：TODO
  *
  * @param nodeID 此次落子处
- * @param colorNum 1 black 2 white
+ * @param color 1 black 2 white
  *
  * */
-function validWrtRuleAndUpdate(nodeID, colorNum) {
-    let neighborMySSs, neighborOppoSSs;
-    [neighborMySSs, neighborOppoSSs] = findDistinctNeighborSSs(nodeID, colorNum);
-    maybeRemoveOpponents(nodeID, neighborOppoSSs, colorNum);
-    let newSingleStoneChiSet = calculateNewSingleStoneChiSet(nodeID);
+function validWrtRuleAndUpdate(nodeID, color) {
+    let neighborMySSs, neighborOppoSSs, // Set<Int>
+        directChi; // Int
+    [neighborMySSs, neighborOppoSSs, directChi] = findNeighborSSnChi(nodeID, color);
 
-    // 无我方邻居棋串
-    if (neighborMySSs.length === 0) {
-        if (newSingleStoneChiSet.length === 0) {
-            // 说明是一次自杀
-            // 唯一回滚之处：邻居敌方各棋串气 +=1
-            for (let ssid of neighborOppoSSs) {
-                // stoneStrings[ssid].chi++;
-                stoneStrings[ssid].chiSet.push(nodeID);
-            }
-            return null;
-        } else {
-            // 独立新建棋串
-            let newSSID = global.nextStoneStringID();
-            stoneStrings[newSSID] = {chiSet: newSingleStoneChiSet, nodes: [nodeID]};
-            gameStatus[nodeID].s = colorNum;
-            gameStatus[nodeID].stoneStringID = newSSID;
-        }
-    } else {// 合并相邻的我方 n(>0) 个棋串
-        let newChiSet = newSingleStoneChiSet; // just mutate it...
-        for (let ssid of neighborMySSs) {
-            for (let chiEle of stoneStrings[ssid].chiSet) {
-                if (!(chiEle in newChiSet)) {
-                    newChiSet.push(chiEle);
-                }
-            }
-        }
-        newChiSet.splice(newChiSet.indexOf(nodeID), 1);
+    let existsEnemyToRemove = neighborOppoSSs.some(function (ssid) {
+        return stoneStrings[ssid].chiSet.size === 1;
+    });
 
-        // 也是一次自杀（带着 neighborhood）
-        if (newChiSet.length === 0) {
-            // 唯一回滚之处：邻居敌方各棋串气 +=1
-            for (let ssid of neighborOppoSSs) {
-                stoneStrings[ssid].chiSet.push(nodeID);
-            }
-            return null;
-        } else {
-            // come into the new stone string!
-            let newSSID = global.nextStoneStringID();
-            gameStatus[nodeID].s = colorNum;
-            gameStatus[nodeID].stoneStringID = newSSID;
-            let newNodes = [nodeID];
-            for (let ssid of neighborMySSs) {
-                newNodes = newNodes.concat(stoneStrings[ssid].nodes); // TODO performance?
-                for (let nid of stoneStrings[ssid].nodes) {
-                    gameStatus[nid].stoneStrings = newSSID; // 新归属
-                }
-                delete stoneStrings[ssid];
-            }
-            stoneStrings[newSSID] = {chiSet: newChiSet, nodes: newNodes};
-        }
+    let existsFriendChiMoreThanTwo = neighborMySSs.some(function (ssid) {
+        return stoneStrings[ssid].chiSet.size >= 2;
+    });
+
+    let validMove = (directChi > 0) || existsEnemyToRemove || existsFriendChiMoreThanTwo;
+    if (validMove) {
+        // 既然不会回滚，那么可以先连自己（或新建棋串），再提敌子儿。提敌子儿时也会更新我方气集的。
+        // 相连之后的新气集：旧棋串气集、新落子气集的（可交）union - {nodeID}
+        // 相连之后的新子儿集：旧棋串子儿集的（不交）union ∪ {nodeID}
+        buildOrMergeSS(nodeID, color, neighborMySSs);
+
+        // 给敌方紧气，maybe 提子儿
+        affectOpponents(nodeID, color, neighborOppoSSs);
+
+        return true;
     }
-
-    return true;
-}
-
-/**
- *
- * 提掉 ssid 所示的棋串的所有子
- *
- * 这个气维护，跟重新数一遍相比，哪个快？TODO
- *
- * @param ssid SSID to remove
- * @param colorToRemove 也能从全局状态里获取，但是麻烦，直接传进来好了
- */
-function removeStoneString(ssid, colorToRemove) {
-
-// 对每个提掉的子
-    for (let removedNID of stoneStrings[ssid].nodes) {
-        gameStatus[removedNID].s = 0;
-        gameStatus[removedNID].stoneStringID = null;
-
-        let neighborOppoSSs = []; // oppo 指 colorToRemove 所示颜色的对手
-        for (let neighborNID of adj0[removedNID]) {
-            let neighborColor = gameStatus[neighborNID].s;
-            let neighborSSID = gameStatus[neighborNID].stoneStringID;
-            if (colorToRemove === global.oppoColor(neighborColor)) {
-                if (!(neighborSSID in neighborOppoSSs)) {
-                    neighborOppoSSs.push(neighborSSID);
-                }
-            }
-        } // neighborOppoSSs OK
-
-        for (let neighborSSID of neighborOppoSSs) {
-            stoneStrings[neighborSSID].chiSet.push(removedNID);
-        }
+    else {
+        return null;
     }
-
-    delete stoneStrings[ssid];
 }
 
 
@@ -321,8 +323,8 @@ function drawAccordingToStatus() {
             if (gameStatus[id].s !== 0) {
                 let x = positionedNodes[id].x,
                     y = positionedNodes[id].y,
-                    colorNum = gameStatus[id].s;
-                drawStone(x, y, colorNum);
+                    color = gameStatus[id].s;
+                drawStone(x, y, color);
             }
         }
     }
