@@ -57,13 +57,12 @@ function init() {
 
         // n for both nearest / node
         let nid = findNearestNodeID(xn, yn);
-        console.log("before update",nid, gameStatus, stoneStrings);
+        console.log("before update", nid, gameStatus, stoneStrings);
         if (notOccupied(nid) && validWrtRuleAndUpdate(nid, global.next)) {
-            // gameStatus[nid].s = global.next; // done by validWrtRuleAndUpdate TODO
             global.flip();
             drawAccordingToStatus();
             infoLog();
-            console.log("after update",nid, gameStatus, stoneStrings);
+            console.log("after update", nid, gameStatus, stoneStrings);
         } else {
             infoLog("这一手不合规则");
         }
@@ -98,7 +97,7 @@ function findNearestNodeID(xn, yn) {
             result = id;
         }
     }
-    return parseInt(result); // !! key is string. but not bug cause i'm finding
+    return parseInt(result); // not a big deal
 }
 
 function notOccupied(nodeID) {
@@ -144,7 +143,7 @@ function findDistinctNeighborSSs(nodeID, colorNum) {
 function maybeRemoveOpponents(nodeID, neighborOppoSSs, myColorNum) {
     // 邻居敌方各棋串气 -=1。若有气 =0 者，逐个提子()——有提子就不会回滚
     for (let ssid of neighborOppoSSs) {
-        stoneStrings[ssid].chiSet.splice(stoneStrings[ssid].chiSet.indexOf(nodeID));
+        stoneStrings[ssid].chiSet.splice(stoneStrings[ssid].chiSet.indexOf(nodeID), 1);
         if (stoneStrings[ssid].chiSet.length === 0) {
             removeStoneString(ssid, global.oppoColor(myColorNum));
         }
@@ -196,7 +195,7 @@ function validWrtRuleAndUpdate(nodeID, colorNum) {
         } else {
             // 独立新建棋串
             let newSSID = global.nextStoneStringID();
-            stoneStrings[newSSID] = {/*chi: newSingleStoneChi,*/ chiSet: newSingleStoneChiSet, nodes: [nodeID]};
+            stoneStrings[newSSID] = {chiSet: newSingleStoneChiSet, nodes: [nodeID]};
             gameStatus[nodeID].s = colorNum;
             gameStatus[nodeID].stoneStringID = newSSID;
         }
@@ -209,13 +208,12 @@ function validWrtRuleAndUpdate(nodeID, colorNum) {
                 }
             }
         }
-        newChiSet.splice(newChiSet.indexOf(nodeID));
+        newChiSet.splice(newChiSet.indexOf(nodeID), 1);
 
         // 也是一次自杀（带着 neighborhood）
         if (newChiSet.length === 0) {
             // 唯一回滚之处：邻居敌方各棋串气 +=1
             for (let ssid of neighborOppoSSs) {
-
                 stoneStrings[ssid].chiSet.push(nodeID);
             }
             return null;
@@ -232,7 +230,7 @@ function validWrtRuleAndUpdate(nodeID, colorNum) {
                 }
                 delete stoneStrings[ssid];
             }
-            stoneStrings[newSSID] = {/*chi: newChi,*/chiSet: newChiSet, nodes: newNodes};
+            stoneStrings[newSSID] = {chiSet: newChiSet, nodes: newNodes};
         }
     }
 
@@ -295,7 +293,7 @@ function drawBoard(ctx) {
     }
 
     /**
-     * 嵌套定义 function 提升出去什么的……看看 TODO
+     * 嵌套定义 function 提升出去什么的……看看 MetaTODO
      */
     function drawLine(x1, y1, x2, y2) {
         ctx.fillStyle = "black";
