@@ -7,6 +7,7 @@
         #canvas {
             width: 100%;
             height: 100%;
+            max-width: 1000px;
 
             /* 现实烦恼来得快：解决 iOS 浏览器事件绑定区域点击闪屏问题 */
             -webkit-tap-highlight-color: transparent;
@@ -16,31 +17,54 @@
             font-size: 2em;
         }
 
+        /*#board{*/
+        /*float:left;*/
+        /*}*/
+
+        /*#meta{*/
+        /*float: right;*/
+        /*}*/
+
+        #control{
+            text-align: center;
+        }
+
     </style>
 
 </head>
 <body onload="init()">
 <!--妙啊，html 里 width height 规定画布大小，css 里 width height 规定缩放？这符合标准吗？-->
-<canvas id="canvas" width="1000" height="1000"></canvas>
-
-<button id="restart" onclick="restart()">重新开始</button>
-<button id="pass" onclick="pass()">放弃一手</button>
-<!--3、 双方连续使用虚着，为终局。TODO-->
-<p>下一手：<span id="next">黑</span>棋</p>
-<p id="info">请点击或触摸下棋</p>
-
-<p>对这个游戏的设想是：任意平面图（<a href="https://en.wikipedia.org/wiki/Planar_graph">Planer Graph</a>）上的围棋。
+<div id="board">
+    <canvas id="canvas" width="1000" height="1000"></canvas>
+</div>
 
 
-<p>Author: <a href="https://sonion.xyz">SOnion</a></p>
+<div id="meta">
+    <div id="control">
+        <button id="restart" onclick="restart()">重新开始</button>
+        <button id="pass" onclick="pass()">放弃一手</button>
+    </div>
 
-<p>TODO:</p>
-<ol>
-    <li>中国规则的禁止全局同形</li>
-    <li><strong>棋盘编辑器</strong></li>
-    <li>自动数子和贴目配置</li>
-    <li>人工智能（zhang）对手</li>
-</ol>
+    <!--3、 双方连续使用虚着，为终局。TODO-->
+    <p>下一手：<span id="next">黑</span>棋</p>
+    <p id="info">请点击或触摸下棋</p>
+
+    <p>对这个游戏的设想是：任意平面图（<a href="https://en.wikipedia.org/wiki/Planar_graph">Planer Graph</a>）上的围棋。
+
+    <p>如果在电脑上玩，棋盘太大，请把浏览器窗口拖窄一点。在手机、平板上玩请用竖屏。
+
+
+    <p>Author: <a href="https://sonion.xyz">SOnion</a></p>
+
+    <p>TODO:</p>
+    <ol>
+        <li>中国规则的禁止全局同形</li>
+        <li><strong>棋盘编辑器</strong></li>
+        <li>自动数子和贴目配置</li>
+        <li>人工智能（zhang）对手</li>
+    </ol>
+</div>
+
 
 <script type="application/javascript" src="script/index.js"></script>
 
