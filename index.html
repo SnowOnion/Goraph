@@ -11,6 +11,11 @@
             /* 现实烦恼来得快：解决 iOS 浏览器事件绑定区域点击闪屏问题 */
             -webkit-tap-highlight-color: transparent;
         }
+
+        button, p, ol {
+            font-size: 2em;
+        }
+
     </style>
 
 </head>
@@ -18,13 +23,13 @@
 <!--妙啊，html 里 width height 规定画布大小，css 里 width height 规定缩放？这符合标准吗？-->
 <canvas id="canvas" width="1000" height="1000"></canvas>
 
-<button id="restart">重新开始</button>
-<button id="pass">放弃一手</button>
-<!--3、 双方连续使用虚着，为终局。-->
+<button id="restart" onclick="restart()">重新开始</button>
+<button id="pass" onclick="pass()">放弃一手</button>
+<!--3、 双方连续使用虚着，为终局。TODO-->
 <p>下一手：<span id="next">黑</span>棋</p>
 <p id="info">请点击或触摸下棋</p>
 
-<p>做这个游戏的动机是：任意平面图（Planer Graph）上的围棋。TODO:</p>
+<p>对这个游戏的设想是：任意平面图（<a href="https://en.wikipedia.org/wiki/Planar_graph">Planer Graph</a>）上的围棋。TODO:</p>
 <ol>
     <li>中国规则的禁止全局同形</li>
     <li><strong>棋盘编辑器</strong></li>
@@ -33,7 +38,7 @@
 </ol>
 <p>Author: <a href="https://sonion.xyz">SOnion</a></p>
 
-<script type="application/javascript" src="../script/index.js"></script>
+<script type="application/javascript" src="script/index.js"></script>
 
 </body>
 </html>
