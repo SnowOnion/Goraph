@@ -36,7 +36,7 @@
 <body onload="init()">
 <!--妙啊，html 里 width height 规定画布大小，css 里 width height 规定缩放？这符合标准吗？-->
 <div id="board">
-    <canvas id="canvas" width="1000" height="1000"></canvas>
+    <canvas id="canvas" width="1000" height="1000">alternative</canvas>
 </div>
 
 
@@ -58,6 +58,38 @@
 
 
 <script type="application/javascript" src="script/index.js"></script>
+
+<div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+        this.page.url = "https://app.sonion.xyz/goraph/";
+        this.page.identifier = "goraph";
+        this.page.title = document.title;
+        this.language = "zh-CN".replace(/-.*/, '');
+    };
+    // wow, gee
+    //    (function()
+    //    {
+    //        var d = document, s = d.createElement('script');
+    //        s.src = 'https://geelawblog.disqus.com/embed.js';
+    //        s.type = 'text/javascript';
+    //        s.async = true;
+    //        s.setAttribute('data-timestamp', +new Date());
+    //        (d.head || d.body).appendChild(s);
+    //        s = d.getElementById('comments-area');
+    //        s.className += ' ' + s.getAttribute('gl-class-with-script');
+    //    })();
+
+    (function () { // DON'T EDIT BELOW THIS LINE
+        var d = document, s = d.createElement('script');
+        s.src = 'https://sonion-app.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by
+    Disqus.</a></noscript>
+
 
 </body>
 </html>

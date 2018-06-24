@@ -55,3 +55,11 @@ Offline: Open `index.html` in web browser.
 但是这个世界的重名太多了，不妨再多一个。而且我认为避免冲突应当用 fully qualified name，比如 “奥尔良的少女”、“美国的华莱士”、“…….凤梨科.凤梨属.菠萝”、“真核生物域.植物界.被子植物门.双子叶植物纲.I类真蔷薇分支.黄杨目.黄杨科.黄杨属.大叶黄杨种”、“真核生物域.植物界.被子植物门.双子叶植物纲.冬青目.冬青科.冬青属.*”，而不是就不取一样的名字了。
 
 干，又跑题。
+
+# Related Work
+
++ 初始想法完全一样吧hhh https://github.com/lalaithion/arbitraryGo 在线版：http://izaakweiss.com/arbitraryGo
+
++ GameGraph 是以游戏状态为结点、以"一步能走到"关系为有向边的图。https://github.com/GunnarFarneback/GoGameGraphs
+
+    + 迷你围棋之奥妙（一）：二路围棋 https://zhuanlan.zhihu.com/p/34426765
