@@ -37,6 +37,8 @@ Offline: Open `index.html` in web browser.
 ## 其他
 
 - [x] Disqus 评论区
+- [ ] 响应式设计
+    - [ ] 包括让 Disqus 在手机上显示正常点的大小
 
 # Techniques
 

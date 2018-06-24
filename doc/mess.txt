@@ -1,3 +1,31 @@
-讨论：围棋规则应该允许自杀吗？ flygo.net/bbs/forum.php?mod=viewthread&tid…
+# Rule
 
+讨论：围棋规则应该允许自杀吗？ http://flygo.net/bbs/forum.php?mod=viewthread&tid=105835
 严格按照中国围棋的“禁止全同”规则，公认已经输了的棋有没有可能靠填子逆转？ https://www.zhihu.com/question/60391464
+
+
+# Board
+
+六边形围棋活型  blog.sina.com.cn/s/blog_5e95b8d30100wv71.html
+立体（三维）围棋有实现的可能吗？ https://www.zhihu.com/question/53412103
+围棋棋盘是否可以发展为以六边形为基础单位的栅格形态？ https://www.zhihu.com/question/35567878
+
+
+# OGR
+
+https://github.com/search?utf8=✓&q=Optical+Graph+Recognition&type=
+5.
+
++ https://github.com/alexsanderam/OGR
+
+    https://github.com/uskudnik/GraphGL/blob/master/examples/graphml-to-json.py
+    Convert from NodeXL (via GraphML-format) to D3-ready json https://gist.github.com/anderser/7432419
+    朋克字符串替换 Python script for converting graphml (*gml) files to json https://gist.github.com/jschaub30/54054f81508003d01d5d
+
+跑题：
+(1993...) Optical recognition of handwritten Chinese characters: Advances since 1980 https://www.sciencedirect.com/science/article/pii/003132039390030Z
+
+
+# Editor
+http://bl.ocks.org/rkirsling/5001347
+https://jgraph.github.io/mxgraph/javascript/index.html
