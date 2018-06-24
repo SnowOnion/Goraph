@@ -16,7 +16,7 @@ Offline: Open `index.html` in web browser.
 ## Feature
 
 - [x] 吃子、重来、放弃一手
-- [ ] 双方连续各放弃一手则终局
+- [x] 双方连续各放弃一手则终局
     - [ ] 使可配置
 - [ ] 棋盘编辑器
     - [ ] Optical Graph Recognition
@@ -40,8 +40,7 @@ Offline: Open `index.html` in web browser.
 
 # Techniques
 
-没有使用“现代前端技术”。现学了一点儿 [`<canvas>`](https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial/Basic_usage) 和 ES6 特性。
-
+没有使用“现代前端技术”。现学了一点儿 [`<canvas>`](https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial/Basic_usage) ；ES6 特性使用和 JS 的 practice 也不知好坏：到处用 let；function 嵌套定义；土法 global 对象。
 
 # Naming
 

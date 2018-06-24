@@ -33,6 +33,10 @@ function initData() {
     delete gameStatus;
     delete global;
 
+    // call for binding
+    let passButton = document.getElementById("pass");
+    passButton.disabled = false;
+
     /**
      * stone string id -> {chiSet: Set<node id>; nodes: Set<node id>}
      * Damn JS type system
@@ -66,10 +70,14 @@ function initData() {
         flip: function () {
             this.next = this.oppoColor(this.next); // hmmm use "this"?
         },
+
         _nextStoneStringID: 0,
         nextStoneStringID: function () {
             return this._nextStoneStringID++;
-        }
+        },
+
+        passed: 0, // 双方共计连续放弃几次啦？===2 则终局
+        ended: false
     };
 }
 
@@ -80,23 +88,25 @@ function init() {
     let canvas = document.getElementById('canvas');
     // alert("Touching screen DOES emit mousedown. But, standard-compliant? ( ﾟ∀。)");
     canvas.addEventListener("mousedown", function (e) {
-        let x, y;
-        [x, y] = getCursorPosition(canvas, e);
-        // n for normalized. 还是想转成棋盘的原位置数据来做计算。
-        let xn = x / canvas.scrollWidth * canvas.width,
-            yn = y / canvas.scrollHeight * canvas.height;
+        if (!global.ended) {
+            let x, y;
+            [x, y] = getCursorPosition(canvas, e);
+            // n for normalized. 还是想转成棋盘的原位置数据来做计算。
+            let xn = x / canvas.scrollWidth * canvas.width,
+                yn = y / canvas.scrollHeight * canvas.height;
 
-        // n for both nearest / node
-        let nid = findNearestNodeID(xn, yn);
-        if (notOccupied(nid) && validWrtRuleAndUpdate(nid, global.next)) {
-            global.flip();
-            drawAccordingToStatus();
-            infoLog();
-            console.log("after update", nid, gameStatus, stoneStrings);
-        } else {
-            infoLog("这一手不合规则。");
+            // n for both nearest / node
+            let nid = findNearestNodeID(xn, yn);
+            if (notOccupied(nid) && validWrtRuleAndUpdate(nid, global.next)) {
+                global.flip();
+                global.passed = 0;
+                drawAccordingToStatus();
+                infoLog();
+                console.log("after update", nid, gameStatus, stoneStrings);
+            } else {
+                infoLog("这一手不合规则。");
+            }
         }
-
     });
 
 
@@ -220,8 +230,17 @@ function restart() {
 function pass() {
     infoLog((global.isNextBlack() ? "黑" : "白") + "棋放弃一手。");
     global.flip();
-    drawAccordingToStatus();
+    global.passed++;
+    if (global.passed === 2) {
+        infoLog("双方连续放弃，本局结束。");
+        global.ended = true;
 
+        // call for binding
+        let passButton = document.getElementById("pass");
+        passButton.disabled = true;
+    } else {
+        drawAccordingToStatus();
+    }
 }
 
 
