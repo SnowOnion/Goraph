@@ -1,13 +1,47 @@
 Goraph
 ---
 
-Goraph := Game of **Go** on arbitrary [planar g**raph**](https://en.wikipedia.org/wiki/Planar_graph).
+Goraph := Game of **Go** on any [g**raph**](https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)).
 
-任意平面图上的围棋游戏。
+任意[图](https://zh.wikipedia.org/wiki/图_(数学))上的围棋游戏。
+
+# Play
+
+Online: [https://app.sonion.xyz/goraph/](https://app.sonion.xyz/goraph/)
+
+Offline: Open `index.html` in web browser.
+
+# TODO?
+
+## Feature
+
+- [x] 吃子、重来、放弃一手
+- [ ] 双方连续各放弃一手则终局
+    - [ ] 使可配置
+- [ ] 棋盘编辑器
+    - [ ] Optical Graph Recognition
+- [ ] 中国规则：禁止全同再现
+    - [ ] 不同棋盘下规则值得探讨……
+- [ ] 悔棋
+- [ ] 多人对战
+- [ ] AI
+
+## 棋盘
+
+- [x] 双层正方形嵌套
+- [ ] 三层正方形嵌套
+- [ ] 囧（直线段）
+- [ ] * 囧（丿是弧线）
+- [ ] 六边形密铺（蜂巢）
+
+## 其他
+
+- [x] Disqus 评论区
 
 # Techniques
 
-没有使用“现代前端技术”（`<canvas>` 算吗？）。
+没有使用“现代前端技术”。现学了一点儿 [`<canvas>`](https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial/Basic_usage) 和 ES6 特性。
+
 
 # Naming
 

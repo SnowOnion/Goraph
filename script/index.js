@@ -54,6 +54,12 @@ function initData() {
         oppoColor: function (myColor) {
             return 3 - myColor;
         },
+        isNextBlack: function () {
+            return this.next === 1;
+        },
+        isNextWhite: function () {
+            return this.next === 2;
+        },
         isEmpty: function (color) {
             return color === 0;
         },
@@ -88,7 +94,7 @@ function init() {
             infoLog();
             console.log("after update", nid, gameStatus, stoneStrings);
         } else {
-            infoLog("这一手不合规则");
+            infoLog("这一手不合规则。");
         }
 
     });
@@ -208,13 +214,14 @@ function infoLog(msg) {
 function restart() {
     initData();
     drawAccordingToStatus();
-    infoLog();
+    infoLog("请点击或触摸下棋。");
 }
 
 function pass() {
+    infoLog((global.isNextBlack() ? "黑" : "白") + "棋放弃一手。");
     global.flip();
     drawAccordingToStatus();
-    infoLog();
+
 }
 
 
