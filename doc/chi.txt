@@ -21,6 +21,12 @@
 
 ----
 
+试试并查集（
+一款围棋软件，程序如何判断是否吃子？ https://www.zhihu.com/question/48280969
+围棋博弈程序的实现与思考（5）——提子算法 coolsooner.iteye.com/blog/1362296
+华为机试—围棋吃子（下围棋）判决（高级题160分：深度优先遍历）（图文吐血整理） https://blog.csdn.net/wtyvhreal/article/details/42624437
+    哎我想我不能在合理的机试时间内做出来……
+
 气数据的维护：**Deprecated, 代码已经不是这么写的了**
 ```
     on 甲方落子:

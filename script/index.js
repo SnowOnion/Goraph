@@ -1,3 +1,10 @@
+/*
+0   1   2
+
+3       4
+
+5   6   7
+*/
 /**
  * 拓扑与坐标无关……
  * */
@@ -26,6 +33,49 @@ const positions0 = {
     7: {x: 750, y: 750}
 };
 
+/*
+0   1   2
+  8   9
+3       4
+  10  11
+5   6   7
+*/
+const adj1 = {
+    0: [1, 3],
+    1: [0, 2, 8, 9],
+    2: [1, 4],
+    3: [0, 8, 10, 5],
+    4: [2, 9, 11, 7],
+    5: [3, 6],
+    6: [10, 11, 5, 7],
+    7: [4, 6],
+
+    8: [1, 9, 10, 3],
+    9: [1, 8, 11, 4],
+    10: [3, 8, 11, 6],
+    11: [9, 4, 10, 6]
+};
+
+/**
+ * 游戏状态又与棋盘形状无关……
+ */
+const positions1 = {
+    0: {x: 250, y: 250},
+    1: {x: 500, y: 250},
+    2: {x: 750, y: 250},
+    3: {x: 250, y: 500},
+    4: {x: 750, y: 500},
+    5: {x: 250, y: 750},
+    6: {x: 500, y: 750},
+    7: {x: 750, y: 750},
+
+    8: {x: 375, y: 375},
+    9: {x: 625, y: 375},
+    10: {x: 375, y: 625},
+    11: {x: 625, y: 625}
+};
+
+const adj = adj1, positions = positions1;
 let global, gameStatus, stoneStrings;
 
 function initData() {
@@ -43,16 +93,11 @@ function initData() {
      * @type {{}}
      */
     stoneStrings = {};
-    gameStatus = {
-        0: {s: 0, stoneStringID: null},
-        1: {s: 0, stoneStringID: null},
-        2: {s: 0, stoneStringID: null},
-        3: {s: 0, stoneStringID: null},
-        4: {s: 0, stoneStringID: null},
-        5: {s: 0, stoneStringID: null},
-        6: {s: 0, stoneStringID: null},
-        7: {s: 0, stoneStringID: null}
-    };
+    gameStatus = {};
+    for (let id in adj) {
+        gameStatus[id] = {s: 0, stoneStringID: null};
+    }
+
     global = {
         next: 1,
         oppoColor: function (myColor) {
@@ -122,8 +167,8 @@ function init() {
     function findNearestNodeID(xn, yn) {
         let dSquare = Number.MAX_VALUE,
             result;
-        for (let id in positions0) {
-            let pNode = positions0[id];
+        for (let id in positions) {
+            let pNode = positions[id];
             let x = pNode.x,
                 y = pNode.y,
                 newDSquare = (x - xn) * (x - xn) + (y - yn) * (y - yn);
@@ -148,8 +193,8 @@ function drawAccordingToStatus() {
         drawBoard(ctx);
         for (let id in gameStatus) {
             if (gameStatus[id].s !== 0) {
-                let x = positions0[id].x,
-                    y = positions0[id].y,
+                let x = positions[id].x,
+                    y = positions[id].y,
                     color = gameStatus[id].s;
                 drawStone(x, y, color);
             }
@@ -161,15 +206,15 @@ function drawAccordingToStatus() {
      * 只从小 id 向大 id 画线，避免画两遍；
      */
     function drawBoard(ctx) {
-        for (let id1 in positions0) {
-            let x1 = positions0[id1].x,
-                y1 = positions0[id1].y;
+        for (let id1 in positions) {
+            let x1 = positions[id1].x,
+                y1 = positions[id1].y;
             drawLittleBlack(x1, y1);
 
-            for (let id2 of adj0[id1]) {
+            for (let id2 of adj[id1]) {
                 if (id1 <= id2) {
-                    let x2 = positions0[id2].x,
-                        y2 = positions0[id2].y;
+                    let x2 = positions[id2].x,
+                        y2 = positions[id2].y;
                     drawLine(x1, y1, x2, y2);
                 }
             }
@@ -296,7 +341,7 @@ function findNeighborSSnChi(nodeID, color) {
     // SS for stone string
     let neighborMySSs = new Set(), neighborOppoSSs = new Set();
     let directChi = 0;
-    for (let nid of adj0[nodeID]) {
+    for (let nid of adj[nodeID]) {
         let neighborColor = gameStatus[nid].s,
             neighborSSID = gameStatus[nid].stoneStringID;
         if (color === neighborColor) {
@@ -347,7 +392,7 @@ function buildOrMergeSS(nodeID, color, neighborMySSs) {
      * @returns {Set}
      */
     function calcNewStoneChiSet(nodeID) {
-        return new Set(adj0[nodeID].filter(function (nid) {
+        return new Set(adj[nodeID].filter(function (nid) {
             let neighborColor = gameStatus[nid].s;
             return global.isEmpty(neighborColor);
         }));
@@ -390,7 +435,7 @@ function removeStoneString(ssidToRemove, colorToRemove) {
 
         // 影响到的敌（敌の敌）邻棋串
         let neighborOppoSSs = new Set(); // oppo 指 colorToRemove 所示颜色的对手
-        adj0[nid].filter(function (nidToAddChi) {
+        adj[nid].filter(function (nidToAddChi) {
             let neighborColor = gameStatus[nidToAddChi].s;
             return colorToRemove === global.oppoColor(neighborColor);
         }).forEach(function (nidToAddChi) {

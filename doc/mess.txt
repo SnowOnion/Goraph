@@ -29,3 +29,13 @@ https://github.com/search?utf8=✓&q=Optical+Graph+Recognition&type=
 # Editor
 http://bl.ocks.org/rkirsling/5001347
 https://jgraph.github.io/mxgraph/javascript/index.html
+
+
+
+# Other
+
+Risk 是什么桌游？ https://boardgames.stackexchange.com/questions/5437/playing-risk-in-an-arbitrary-graph
+
+(1992, 41 cites) Note Infiltration Games on Arbitrary Graphs https://ac.els-cdn.com/0022247X9290295O/1-s2.0-0022247X9290295O-main.pdf?_tid=302a4aeb-7c30-4fef-b6e1-89edce2eacc1&acdnat=1529634772_8fc3cef45169938bef68500b10639d68
+
+(No cites) Graph Searching Games logic.las.tu-berlin.de/Members/Kreutzer/Publications/11-games-survey.pdf

@@ -43,14 +43,11 @@
 <div id="meta">
     <div id="control">
         <button id="restart" onclick="restart()">重新开始</button>
-        <button id="pass" onclick="pass()">放弃一手</button>
+        <button id="pass" onclick="pass()">放弃一手</button><!--3、 双方连续使用虚着，为终局。-->
     </div>
 
-    <!--3、 双方连续使用虚着，为终局。TODO-->
     <p>下一手：<span id="next">黑</span>棋</p>
     <p id="info">请点击或触摸下棋。如果在电脑上玩，棋盘太大，请把浏览器窗口拖窄一点。在手机、平板上玩请用竖屏。</p>
-
-    <!--<p>如果在电脑上玩，棋盘太大，请把浏览器窗口拖窄一点。在手机、平板上玩请用竖屏。-->
 
     <p>Author: <a href="https://sonion.xyz">SOnion</a></p>
 
@@ -67,7 +64,7 @@
         this.page.title = document.title;
         this.language = "zh-CN".replace(/-.*/, '');
     };
-    // wow, gee
+    // wow, gee TODO tell him
     //    (function()
     //    {
     //        var d = document, s = d.createElement('script');
