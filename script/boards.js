@@ -138,7 +138,7 @@ function buildNxNPositions(n, padding, wh) {
 // const adj2 = {};
 
 
-const boards = [
+export const boards = [
     {
         name: "福",
         adj: adj0,

@@ -29,7 +29,8 @@ Offline: Open `index.html` in web browser.
 ## 棋盘
 
 - [x] 双层正方形嵌套
-- [ ] 三层正方形嵌套
+- [x] 三层正方形嵌套
+- [x] 普通 n×n 棋盘
 - [ ] 囧（直线段）
 - [ ] * 囧（丿是弧线）
 - [ ] 六边形密铺（蜂巢）
@@ -38,7 +39,8 @@ Offline: Open `index.html` in web browser.
 
 - [x] Disqus 评论区
 - [ ] 响应式设计
-    - [ ] 包括让 Disqus 在手机上显示正常点的大小
+    - [ ] 包括让 Disqus 在手机上显示正常点儿的大小
+- [x] 用 touch 事件消除了移动端的触摸卡顿
 
 # Techniques
 

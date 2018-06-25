@@ -1,15 +1,18 @@
-// require("boards.js")
+import {boards} from "./boards.js";
 
-// const adj = adj1, positions = positions1;
-const adj = boards[2].adj, positions = boards[2].p;
+let boardID = 1;
+const adj = boards[boardID].adj, positions = boards[boardID].p;
 let global, gameStatus, stoneStrings;
 
 function initData() {
-    delete stoneStrings;
-    delete gameStatus;
-    delete global;
+    // SyntaxError: applying the 'delete' operator to an unqualified name is deprecated
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Delete_in_strict_mode
+    // Set to null, wait for GC // Just Wait for setting to other objects?
+    // stoneStrings = null;
+    // gameStatus = null;
+    // global = null;
 
-    // call for binding
+    // calling for binding ( ﾟ∀。)
     let passButton = document.getElementById("pass");
     passButton.disabled = false;
 
@@ -57,11 +60,22 @@ function init() {
     drawAccordingToStatus();
 
     let canvas = document.getElementById('canvas');
-    // alert("Touching screen DOES emit mousedown. But, standard-compliant? ( ﾟ∀。)");
+    // alert("Touching screen DOES emit mousedown. But, standard-compliant? ( ﾟ∀。)"); // It is being interesting (no
+    canvas.addEventListener("touchstart", function (e) {
+        e.preventDefault();
+        let clientX = e.touches.item(0).clientX, clientY = e.touches.item(0).clientY;
+        handlePlay(clientX, clientY)
+    });
     canvas.addEventListener("mousedown", function (e) {
+        e.preventDefault();
+        let clientX = e.clientX, clientY = e.clientY;
+        handlePlay(clientX, clientY)
+    });
+
+    function handlePlay(clientX, clientY) {
         if (!global.ended) {
             let x, y;
-            [x, y] = getCursorPosition(canvas, e);
+            [x, y] = getCursorPosition(clientX, clientY);
             // n for normalized. 还是想转成棋盘的原位置数据来做计算。
             let xn = x / canvas.scrollWidth * canvas.width,
                 yn = y / canvas.scrollHeight * canvas.height;
@@ -78,14 +92,14 @@ function init() {
                 infoLog("这一手不合规则。");
             }
         }
-    });
+    }
 
 
     // https://stackoverflow.com/a/18053642/2801663
-    function getCursorPosition(canvas, event) {
+    function getCursorPosition(clientX, clientY) {
         let rect = canvas.getBoundingClientRect();
-        let x = event.clientX - rect.left;
-        let y = event.clientY - rect.top;
+        let x = clientX - rect.left;
+        let y = clientY - rect.top;
         return [x, y];
     }
 
@@ -377,3 +391,31 @@ function removeStoneString(ssidToRemove, colorToRemove) {
 
     });
 }
+
+// 1. do not want to mix html with js (<body onload=...)
+// 2. want to add touch event handler to button
+// 3. do not want to "export" to global scope (?) like
+// window.init = init;
+// window.restart = restart;
+// window.pass = pass;
+// so:
+
+// Don't want to use JQuery for now. https://www.sitepoint.com/jquery-document-ready-plain-javascript/
+document.addEventListener("DOMContentLoaded", init);
+// If don't preventDefault: one touch => two clicks
+document.getElementById("restart").addEventListener("mousedown", function (e) {
+    e.preventDefault();
+    restart();
+});
+document.getElementById("restart").addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    restart();
+});
+document.getElementById("pass").addEventListener("mousedown", function (e) {
+    e.preventDefault();
+    pass();
+});
+document.getElementById("pass").addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    pass();
+});
