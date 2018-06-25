@@ -23,6 +23,7 @@ Offline: Open `index.html` in web browser.
 - [ ] 中国规则：禁止全同再现
     - [ ] 不同棋盘下规则值得探讨……
 - [ ] 悔棋
+- [ ] 鼠标移动、touchmove 预览下的位置
 - [ ] 多人对战
 - [ ] AI
 

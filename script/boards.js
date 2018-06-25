@@ -8,7 +8,7 @@
 /**
  * 拓扑与坐标无关……
  * */
-const adj0 = {
+const adj福 = {
     0: [1, 3],
     1: [0, 2, 3, 4],
     2: [1, 4],
@@ -22,7 +22,7 @@ const adj0 = {
 /**
  * 游戏状态又与棋盘形状无关……
  */
-const positions0 = {
+const positions福 = {
     0: {x: 250, y: 250},
     1: {x: 500, y: 250},
     2: {x: 750, y: 250},
@@ -40,7 +40,7 @@ const positions0 = {
   10  11
 5   6   7
 */
-const adj1 = {
+const adj玫瑰 = {
     0: [1, 3],
     1: [0, 2, 8, 9],
     2: [1, 4],
@@ -56,10 +56,7 @@ const adj1 = {
     11: [9, 4, 10, 6]
 };
 
-/**
- * 游戏状态又与棋盘形状无关……
- */
-const positions1 = {
+const positions玫瑰 = {
     0: {x: 250, y: 250},
     1: {x: 500, y: 250},
     2: {x: 750, y: 250},
@@ -74,6 +71,77 @@ const positions1 = {
     10: {x: 375, y: 625},
     11: {x: 625, y: 625}
 };
+
+/*
+0   1   2   3
+
+4           5
+    6   7
+
+8   9   10  11
+*/
+const adj囧 = {
+    0: [1, 4],
+    1: [0, 4, 2],
+    2: [1, 3, 5],
+    3: [2, 5],
+    4: [0, 1, 8],
+    5: [3, 2, 11],
+    6: [7, 9],
+    7: [6, 10],
+    8: [4, 9],
+    9: [8, 6, 10],
+    10: [9, 7, 11],
+    11: [5, 10]
+};
+
+/**
+ * "参数化设计"？( ﾟ∀。)
+ * @param padding
+ * @returns {{}}
+ */
+function build囧Positions(padding) {
+    padding = padding || 200;
+    let l = 1000 - 2 * padding;
+    let d5 = l / 5, d3 = l / 3;
+
+    // 相对坐标
+    let raw = {
+        0: {x: 0, y: 0},
+        1: {x: 2 * d5, y: 0},
+        2: {x: 3 * d5, y: 0},
+        3: {x: 5 * d5, y: 0},
+        4: {x: 0, y: 2 * d5},
+        5: {x: 5 * d5, y: 2 * d5},
+        6: {x: d3, y: l - d3},
+        7: {x: 2 * d3, y: l - d3},
+        8: {x: 0, y: l},
+        9: {x: d3, y: l},
+        10: {x: 2 * d3, y: l},
+        11: {x: l, y: l}
+    };
+    for (let pi in raw) {
+        raw[pi].x += padding;
+        raw[pi].y += padding;
+    }
+    return raw;
+}
+
+const positions囧 = {
+    0: {x: 250, y: 250},
+    1: {x: 500, y: 250},
+    2: {x: 750, y: 250},
+    3: {x: 250, y: 500},
+    4: {x: 750, y: 500},
+    5: {x: 250, y: 750},
+    6: {x: 500, y: 750},
+    7: {x: 750, y: 750},
+    8: {x: 375, y: 375},
+    9: {x: 625, y: 375},
+    10: {x: 375, y: 625},
+    11: {x: 625, y: 625}
+};
+
 
 /*
 0  1  2  ... 8
@@ -135,23 +203,54 @@ function buildNxNPositions(n, padding, wh) {
     return positions;
 }
 
-// const adj2 = {};
-
 
 export const boards = [
-    {
-        name: "福",
-        adj: adj0,
-        p: positions0
-    },
-    {
-        name: "玫瑰",
-        adj: adj1,
-        p: positions1
-    },
-    {
-        name: "9×9",
-        adj: buildNxNAdj(9),
-        p: buildNxNPositions(9)
-    },
-];
+        {
+            name: "福",
+            adj: adj福,
+            p: positions福
+        },
+        {
+            name: "玫瑰",
+            adj: adj玫瑰,
+            p: positions玫瑰
+        },
+        {
+            name: "囧",
+            adj: adj囧,
+            p: build囧Positions(200)
+        },
+        {
+            name: "2×2",
+            adj:
+                buildNxNAdj(2),
+            p:
+                buildNxNPositions(2)
+        }
+        ,
+        {
+            name: "4×4",
+            adj:
+                buildNxNAdj(4),
+            p:
+                buildNxNPositions(4)
+        }
+        ,
+        {
+            name: "9×9",
+            adj:
+                buildNxNAdj(9),
+            p:
+                buildNxNPositions(9)
+        }
+        ,
+        {
+            name: "13×13",
+            adj:
+                buildNxNAdj(13),
+            p:
+                buildNxNPositions(13)
+        }
+        ,
+    ]
+;

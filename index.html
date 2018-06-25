@@ -36,20 +36,14 @@
 </head>
 
 <body>
-<!--<body>-->
-<!--妙啊，html 里 width height 规定画布大小，css 里 width height 规定缩放？这符合标准吗？-->
 <div id="board">
+    <!--妙啊，html 里 width height 规定画布大小，css 里 width height 规定缩放？这符合标准吗？-->
     <canvas id="canvas" width="1000" height="1000">alternative</canvas>
 </div>
 
-
 <div id="meta">
     <div id="control">
-        <select>
-            <option value="volvo">Volvo</option>
-            <option value="saab">Saab</option>
-            <option value="opel">Opel</option>
-            <option value="audi">Audi</option>
+        <select id="board-options">
         </select>
         <button id="restart">重新开始</button>
         <button id="pass">放弃一手</button><!--3、 双方连续使用虚着，为终局。-->
@@ -59,12 +53,11 @@
     <p id="info">请点击或触摸下棋。双方在同一设备（电脑、手机、平板）上轮流落子。如果在电脑上玩且棋盘太大，请把浏览器窗口拖窄一点。在手机、平板上玩请用竖屏。</p>
 
     <p>Author: <a href="https://sonion.xyz">SOnion</a></p>
+    <p>Version: v0.3.0</p>
 
 </div>
 
 <script type="module" src="script/index.js"></script>
-<!--<script type="application/javascript" src="script/boards.js"></script>-->
-<!--<script type="application/javascript" src="script/index.js"></script>-->
 
 <div id="disqus_thread"></div>
 <script>

@@ -1,62 +1,12 @@
 import {boards} from "./boards.js";
 
-let boardID = 1;
-const adj = boards[boardID].adj, positions = boards[boardID].p;
+let defaultBoardID = 2;
+let adj = boards[defaultBoardID].adj, positions = boards[defaultBoardID].p;
 let global, gameStatus, stoneStrings;
-
-function initData() {
-    // SyntaxError: applying the 'delete' operator to an unqualified name is deprecated
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Delete_in_strict_mode
-    // Set to null, wait for GC // Just Wait for setting to other objects?
-    // stoneStrings = null;
-    // gameStatus = null;
-    // global = null;
-
-    // calling for binding ( ﾟ∀。)
-    let passButton = document.getElementById("pass");
-    passButton.disabled = false;
-
-    /**
-     * stone string id -> {chiSet: Set<node id>; nodes: Set<node id>}
-     * Damn JS type system
-     * @type {{}}
-     */
-    stoneStrings = {};
-    gameStatus = {};
-    for (let id in adj) {
-        gameStatus[id] = {s: 0, stoneStringID: null};
-    }
-
-    global = {
-        next: 1,
-        oppoColor: function (myColor) {
-            return 3 - myColor;
-        },
-        isNextBlack: function () {
-            return this.next === 1;
-        },
-        isNextWhite: function () {
-            return this.next === 2;
-        },
-        isEmpty: function (color) {
-            return color === 0;
-        },
-        flip: function () {
-            this.next = this.oppoColor(this.next); // hmmm use "this"?
-        },
-
-        _nextStoneStringID: 0,
-        nextStoneStringID: function () {
-            return this._nextStoneStringID++;
-        },
-
-        passed: 0, // 双方共计连续放弃几次啦？===2 则终局
-        ended: false
-    };
-}
 
 function init() {
     initData();
+    initBoardOptions();
     drawAccordingToStatus();
 
     let canvas = document.getElementById('canvas');
@@ -121,6 +71,67 @@ function init() {
     }
 }
 
+function initData() {
+    // SyntaxError: applying the 'delete' operator to an unqualified name is deprecated
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Delete_in_strict_mode
+    // Set to null, wait for GC // Just Wait for setting to other objects?
+    // stoneStrings = null;
+    // gameStatus = null;
+    // global = null;
+
+    // calling for binding ( ﾟ∀。)
+    let passButton = document.getElementById("pass");
+    passButton.disabled = false;
+
+    /**
+     * stone string id -> {chiSet: Set<node id>; nodes: Set<node id>}
+     * Damn JS type system
+     * @type {{}}
+     */
+    stoneStrings = {};
+    gameStatus = {};
+    for (let id in adj) {
+        gameStatus[id] = {s: 0, stoneStringID: null};
+    }
+
+    global = {
+        next: 1,
+        oppoColor: function (myColor) {
+            return 3 - myColor;
+        },
+        isNextBlack: function () {
+            return this.next === 1;
+        },
+        isNextWhite: function () {
+            return this.next === 2;
+        },
+        isEmpty: function (color) {
+            return color === 0;
+        },
+        flip: function () {
+            this.next = this.oppoColor(this.next); // hmmm use "this"?
+        },
+
+        _nextStoneStringID: 0,
+        nextStoneStringID: function () {
+            return this._nextStoneStringID++;
+        },
+
+        passed: 0, // 双方共计连续放弃几次啦？===2 则终局
+        ended: false
+    };
+}
+
+function initBoardOptions() {
+    let boardOptions = document.getElementById("board-options");
+    for (let bid in boards) {
+        let option = document.createElement("option");
+        option.value = bid;
+        option.text = boards[bid].name;
+        boardOptions.add(option);
+    }
+    boardOptions.selectedIndex = defaultBoardID;
+}
 
 function drawAccordingToStatus() {
     let nextDom = document.getElementById("next");
@@ -207,9 +218,19 @@ function infoLog(msg) {
 }
 
 function restart() {
+    readOptions();
     initData();
     drawAccordingToStatus();
     infoLog("请点击或触摸下棋。");
+}
+
+function readOptions() {
+    // calling for binding (二度)
+    let oSelect = document.getElementById('board-options');
+    let ind = oSelect.selectedIndex;
+    let boardID = oSelect.options[ind].value;
+    adj = boards[boardID].adj;
+    positions = boards[boardID].p;
 }
 
 function pass() {
