@@ -18,6 +18,11 @@
             font-size: 2em;
         }
 
+        select {
+            font-size: 1.8em;
+            width: 30%;
+        }
+
         /*#board{*/
         /*float:left;*/
         /*}*/
@@ -42,6 +47,12 @@
 
 <div id="meta">
     <div id="control">
+        <select>
+            <option value="volvo">Volvo</option>
+            <option value="saab">Saab</option>
+            <option value="opel">Opel</option>
+            <option value="audi">Audi</option>
+        </select>
         <button id="restart" onclick="restart()">重新开始</button>
         <button id="pass" onclick="pass()">放弃一手</button><!--3、 双方连续使用虚着，为终局。-->
     </div>
@@ -53,7 +64,7 @@
 
 </div>
 
-
+<script type="application/javascript" src="script/boards.js"></script>
 <script type="application/javascript" src="script/index.js"></script>
 
 <div id="disqus_thread"></div>
