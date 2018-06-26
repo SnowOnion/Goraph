@@ -1,12 +1,12 @@
 import {boards} from "./boards.js";
 
-let defaultBoardID = 2;
+const defaultBoardID = 2;
 let adj = boards[defaultBoardID].adj, positions = boards[defaultBoardID].p;
 let global, gameStatus, stoneStrings;
 
 function init() {
-    initData();
     initBoardOptions();
+    initData();
     drawAccordingToStatus();
 
     let canvas = document.getElementById('canvas');

@@ -150,6 +150,13 @@ const positions囧 = {
 .            .
 .            .
 72 73 74 ... 80
+
+0 1 2
+3 4 5
+6 7 8
+
+0 1
+2 3
 */
 /**
  * @param n
@@ -159,7 +166,7 @@ function buildNxNAdj(n) {
     // 角
     adj[0] = [1, n];
     adj[n - 1] = [n - 2, 2 * n - 1];
-    adj[n * (n - 1)] = [(n - 1) * (n - 1), n * (n - 1) + 1];
+    adj[n * (n - 1)] = [n * (n - 1) - n, n * (n - 1) + 1];
     adj[n * n - 1] = [n * n - 2, n * n - 1 - n];
     // 边
     for (let ij = 1; ij <= n - 2; ij++) {
@@ -254,3 +261,4 @@ export const boards = [
         ,
     ]
 ;
+window.boards = boards; // debug
