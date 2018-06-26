@@ -39,3 +39,13 @@ Risk 是什么桌游？ https://boardgames.stackexchange.com/questions/5437/play
 (1992, 41 cites) Note Infiltration Games on Arbitrary Graphs https://ac.els-cdn.com/0022247X9290295O/1-s2.0-0022247X9290295O-main.pdf?_tid=302a4aeb-7c30-4fef-b6e1-89edce2eacc1&acdnat=1529634772_8fc3cef45169938bef68500b10639d68
 
 (No cites) Graph Searching Games logic.las.tu-berlin.de/Members/Kreutzer/Publications/11-games-survey.pdf
+
+把Game Graph可视化 。这可以让悔棋O(1)回到一个状态hhh PS并感。无后效性（不问出处）。1-gram。
+
+
+
+# Dev
+
+Firefox 的移动设备模拟准不准啊？iPhone SE 棋盘仍迟钝，Lumia 按钮仍误双击
+
+// “global”都是在同一个board里玩； adj和positions涉及换board。hmmm

@@ -7,11 +7,14 @@ Goraph := Game of **Go** on any [g**raph**](https://en.wikipedia.org/wiki/Graph_
 
 # Play
 
-Online: [https://app.sonion.xyz/goraph/](https://app.sonion.xyz/goraph/)
++ Online: [https://app.sonion.xyz/goraph/](https://app.sonion.xyz/goraph/)
++ or
++ Offline:
+    + Simply open `index.html` in web browser.
+    + or
+    + Use any HTTP server to serve this directory as static files, e.g. `python -m SimpleHTTPServer`.
 
-Offline: Open `index.html` in web browser.
-
-# TODO?
+# TODO（see also [version history](doc/log.md)）
 
 ## Feature
 
@@ -19,29 +22,38 @@ Offline: Open `index.html` in web browser.
 - [x] 双方连续各放弃一手则终局
     - [ ] 使可配置
 - [ ] 棋盘编辑器
-    - [ ] Optical Graph Recognition
+    - [ ] 光学图识别
 - [ ] 中国规则：禁止全同再现
     - [ ] 不同棋盘下规则值得探讨……
 - [ ] 悔棋
-- [ ] 鼠标移动、touchmove 预览下的位置
+    - [ ] 按钮：重新开始 选图select 悔棋 不下
+- [ ] 鼠标移动、touchmove 预览将下的位置
+    touchmove 留作缩放？……
+    touchmove 预览的话还得有"取消施法"
 - [ ] 多人对战
 - [ ] AI
+
 
 ## 棋盘
 
 - [x] 双层正方形嵌套
 - [x] 三层正方形嵌套
 - [x] 普通 n×n 棋盘
-- [ ] 囧（直线段）
+- [x] 囧（直线段）
 - [ ] * 囧（丿是弧线）
 - [ ] 六边形密铺（蜂巢）
+- [ ] 三角形密铺
 
-## 其他
+## UI，UE
 
 - [x] Disqus 评论区
-- [ ] 响应式设计
-    - [ ] 包括让 Disqus 在手机上显示正常点儿的大小
+- [ ] 移动端优化（喂应该先考虑吧）
+    - [ ] 响应式设计，包括让 Disqus 在手机上显示正常点儿的大小
+    - [ ] 禁止移动端缩放（同时提供字号调整？）
+    - [ ] iPhone Safari select一点就放大网页 探秘
 - [x] 用 touch 事件消除了移动端的触摸卡顿
+- [ ] 棋子上写序号
+    - [ ] 使可配置
 
 # Techniques
 
