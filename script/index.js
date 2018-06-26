@@ -176,6 +176,7 @@ function drawAccordingToStatus() {
          */
         function drawLine(x1, y1, x2, y2) {
             ctx.fillStyle = "black";
+            ctx.lineWidth = 1; // = 15 画 icon（失败）
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
@@ -199,6 +200,7 @@ function drawAccordingToStatus() {
     function drawStone(x, y, colorEnum) {
         ctx.fillStyle = colorEnum === 1 ? "black" : "white";
         ctx.beginPath();
+        // 原 35，画 icon 100（失败）
         ctx.arc(x, y, 35, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = "black";

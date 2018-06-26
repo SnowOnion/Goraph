@@ -9,10 +9,7 @@ Goraph := Game of **Go** on any [g**raph**](https://en.wikipedia.org/wiki/Graph_
 
 + Online: [https://app.sonion.xyz/goraph/](https://app.sonion.xyz/goraph/)
 + or
-+ Offline:
-    + Simply open `index.html` in web browser.
-    + or
-    + Use any HTTP server to serve this directory as static files, e.g. `python -m SimpleHTTPServer`.
++ Offline: Use any HTTP server to serve this directory as static files, e.g. `python -m SimpleHTTPServer`.
 
 # TODO（see also [version history](doc/log.md)）
 
@@ -54,6 +51,7 @@ Goraph := Game of **Go** on any [g**raph**](https://en.wikipedia.org/wiki/Graph_
 - [x] 用 touch 事件消除了移动端的触摸卡顿
 - [ ] 棋子上写序号
     - [ ] 使可配置
+- [ ] 若还没下子，则选棋盘后直接切换，不用点重新开始（嗯不要在 pass n play 模式过拟合）
 
 # Techniques
 
