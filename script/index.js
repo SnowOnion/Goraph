@@ -1,11 +1,15 @@
 import {boards} from "./boards.js";
+import {checkFiveWinning} from "./five.js";
 
 const defaultBoardID = 2;
 let adj = boards[defaultBoardID].adj, positions = boards[defaultBoardID].p;
 let global, gameStatus, stoneStrings;
+let isRectangularBoard = false, hasFiveRule = false, w, h;
 
 function init() {
     initBoardOptions();
+    // ↓
+    readOptions();
     initData();
     drawAccordingToStatus();
 
@@ -36,8 +40,23 @@ function init() {
                 global.flip();
                 global.passed = 0;
                 drawAccordingToStatus();
-                infoLog();
-                console.log("after update", nid, gameStatus, stoneStrings);
+                if (hasFiveRule) {
+                    let fiveResult = checkFiveWinning(gameStatus, w, h, nid);
+                    if (fiveResult !== 0) {
+                        infoLog("按五子棋规则，" + (fiveResult === 1 ? "黑" : "白") + "胜。");
+                        global.ended = true;
+                        // call for binding
+                        let passButton = document.getElementById("pass");
+                        passButton.disabled = true;
+                    }
+                    else {
+                        infoLog();
+                    }
+                }
+                else {
+                    infoLog();
+                }
+                // console.log("after update", nid, gameStatus, stoneStrings);
             } else {
                 infoLog("这一手不合规则。");
             }
@@ -214,7 +233,7 @@ function drawAccordingToStatus() {
  * @param msg No argument = clear
  */
 function infoLog(msg) {
-    msg = msg || "　";
+    msg = msg || "　"; // 全角空格，顶一行
     let info = document.getElementById('info');
     info.innerHTML = msg;
 }
@@ -233,6 +252,13 @@ function readOptions() {
     let boardID = oSelect.options[ind].value;
     adj = boards[boardID].adj;
     positions = boards[boardID].p;
+    isRectangularBoard = boards[boardID].cat === "rectangular";
+    if (isRectangularBoard) {
+        w = boards[boardID].w;
+        h = boards[boardID].h;
+    }
+    let five = document.getElementById('five');
+    hasFiveRule = five.checked;
 }
 
 function pass() {
@@ -441,4 +467,9 @@ document.getElementById("pass").addEventListener("mousedown", function (e) {
 document.getElementById("pass").addEventListener("touchstart", function (e) {
     e.preventDefault();
     pass();
+});
+
+// call for binding
+document.getElementById('five').addEventListener("change", function (e) {
+    hasFiveRule = document.getElementById('five').checked;
 });

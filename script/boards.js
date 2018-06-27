@@ -215,24 +215,30 @@ export const boards = [
         {
             name: "福",
             adj: adj福,
-            p: positions福
+            p: positions福,
+            cat: null
         },
         {
             name: "玫瑰",
             adj: adj玫瑰,
-            p: positions玫瑰
+            p: positions玫瑰,
+            cat: null
         },
         {
             name: "囧",
             adj: adj囧,
-            p: build囧Positions(200)
+            p: build囧Positions(200),
+            cat: null
         },
         {
             name: "2×2",
             adj:
                 buildNxNAdj(2),
             p:
-                buildNxNPositions(2)
+                buildNxNPositions(2),
+            cat: "rectangular",
+            w: 2,
+            h: 2
         }
         ,
         {
@@ -240,7 +246,10 @@ export const boards = [
             adj:
                 buildNxNAdj(4),
             p:
-                buildNxNPositions(4)
+                buildNxNPositions(4),
+            cat: "rectangular",
+            w: 4,
+            h: 4
         }
         ,
         {
@@ -248,7 +257,10 @@ export const boards = [
             adj:
                 buildNxNAdj(9),
             p:
-                buildNxNPositions(9)
+                buildNxNPositions(9),
+            cat: "rectangular",
+            w: 9,
+            h: 9
         }
         ,
         {
@@ -256,7 +268,10 @@ export const boards = [
             adj:
                 buildNxNAdj(13),
             p:
-                buildNxNPositions(13)
+                buildNxNPositions(13),
+            cat: "rectangular",
+            w: 13,
+            h: 13
         }
         ,
     ]
