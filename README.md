@@ -5,21 +5,27 @@ Goraph := Game of **Go** on any [g**raph**](https://en.wikipedia.org/wiki/Graph_
 
 任意[图](https://zh.wikipedia.org/wiki/图_(数学))上的围棋游戏。
 
+[TOC]
+
 # Play
 
-+ Online: [https://app.sonion.xyz/goraph/](https://app.sonion.xyz/goraph/)
-+ or
-+ Offline: Use any HTTP server to serve this directory as static files, e.g. `python -m SimpleHTTPServer`.
++ Choose 1 way out of the two:
+    + Online: [https://app.sonion.xyz/goraph/](https://app.sonion.xyz/goraph/)
+    + Offline: Use any HTTP server to serve this directory as static files, e.g. 
+        + Python 2: `python -m SimpleHTTPServer`
+        + Python 3: `python3 -m http.server`
 
-# TODO（see also [version history](doc/log.md)）
+# TODO
 
-## Feature
+（see also [version history](doc/log.md)）
+
+## Features
 
 - [x] 吃子、重来、放弃一手
 - [x] 双方连续各放弃一手则终局
     - [ ] 使可配置
 - [ ] 棋盘编辑器
-    - [ ] 光学图识别
+    - [ ] 光学图识别！“OGR”
 - [ ] 中国规则：禁止全同再现
     - [ ] 不同棋盘下规则值得探讨……
 - [ ] 悔棋
@@ -31,7 +37,7 @@ Goraph := Game of **Go** on any [g**raph**](https://en.wikipedia.org/wiki/Graph_
 - [ ] AI
 
 
-## 棋盘
+## 预设棋盘 | Default Boards
 
 - [x] 双层正方形嵌套
 - [x] 三层正方形嵌套
@@ -67,7 +73,15 @@ Goraph := Game of **Go** on any [g**raph**](https://en.wikipedia.org/wiki/Graph_
 
 都是 Golang 实现的图论数据结构和算法，( ﾟ∀。)
 
-但是这个世界的重名太多了，不妨再多一个。而且我认为避免冲突应当用 fully qualified name，比如 “奥尔良的少女”、“美国的华莱士”、“…….凤梨科.凤梨属.菠萝”、“真核生物域.植物界.被子植物门.双子叶植物纲.I类真蔷薇分支.黄杨目.黄杨科.黄杨属.大叶黄杨种”、“真核生物域.植物界.被子植物门.双子叶植物纲.冬青目.冬青科.冬青属.*”，而不是就不取一样的名字了。
+但是这个世界的重名太多了，不妨再多一个。而且我认为避免冲突应当用 fully qualified name，比如
+
++ “奥尔良的少女”
++ “美国的华莱士”
++ “…….凤梨科.凤梨属.菠萝”
++ “真核生物域.植物界.被子植物门.双子叶植物纲.I类真蔷薇分支.黄杨目.黄杨科.黄杨属.大叶黄杨种”
++ “真核生物域.植物界.被子植物门.双子叶植物纲.冬青目.冬青科.冬青属.*”
+
+，而不是就不能取一样的名字了（further reading: [《**谁动了我的名字**》](https://www.zhihu.com/question/29598070/answer/45532034)）。
 
 干，又跑题。
 
