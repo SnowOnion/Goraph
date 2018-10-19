@@ -97,7 +97,7 @@ const adj囧 = {
 
 /**
  * "参数化设计"？( ﾟ∀。)
- * @param padding
+ * @param padding 囧字边框距离 canvas 的空白，上下左右相同
  * @returns {{}}
  */
 function build囧Positions(padding) {
@@ -127,21 +127,6 @@ function build囧Positions(padding) {
     return raw;
 }
 
-const positions囧 = {
-    0: {x: 250, y: 250},
-    1: {x: 500, y: 250},
-    2: {x: 750, y: 250},
-    3: {x: 250, y: 500},
-    4: {x: 750, y: 500},
-    5: {x: 250, y: 750},
-    6: {x: 500, y: 750},
-    7: {x: 750, y: 750},
-    8: {x: 375, y: 375},
-    9: {x: 625, y: 375},
-    10: {x: 375, y: 625},
-    11: {x: 625, y: 625}
-};
-
 
 /*
 0  1  2  ... 8
@@ -170,14 +155,14 @@ function buildNxNAdj(n) {
     adj[n * n - 1] = [n * n - 2, n * n - 1 - n];
     // 边
     for (let ij = 1; ij <= n - 2; ij++) {
-        let topi = ij;
-        adj[topi] = [topi - 1, topi + 1, topi + n];
-        let boti = n * (n - 1) + ij;
-        adj[boti] = [boti - 1, boti + 1, boti - n];
-        let lfti = ij * n;
-        adj[lfti] = [lfti - n, lfti + n, lfti + 1];
-        let rgti = ij * n + n - 1;
-        adj[rgti] = [rgti - n, rgti + n, rgti - 1];
+        let topI = ij;
+        adj[topI] = [topI - 1, topI + 1, topI + n];
+        let botI = n * (n - 1) + ij;
+        adj[botI] = [botI - 1, botI + 1, botI - n];
+        let lftI = ij * n;
+        adj[lftI] = [lftI - n, lftI + n, lftI + 1];
+        let rgtI = ij * n + n - 1;
+        adj[rgtI] = [rgtI - n, rgtI + n, rgtI - 1];
     }
     // 肚皮
     for (let i = 1; i <= n - 2; i++) {
@@ -276,4 +261,4 @@ export const boards = [
         ,
     ]
 ;
-window.boards = boards; // debug
+window.boards = boards; // debug. Make name ``boards'' accessible globally (hence, in browser console).
