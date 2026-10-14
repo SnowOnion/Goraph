@@ -21,6 +21,7 @@ import {
   boardHash,
 } from '@/core/game-engine';
 import { checkFiveWinning } from '@/core/five';
+import { pickAIMove, AIConfig, DEFAULT_AI_CONFIG } from '@/core/ai';
 import { AdjacencyList, PositionsMap, GameState, StoneStringsMap } from '@/core/types';
 
 /* ------------------------------------------------------------------ */
@@ -48,6 +49,10 @@ interface FullState {
   boardHashes: Set<string>;
   /** 是否启用禁止全同再现规则 */
   noRepeat: boolean;
+  /** 是否启用 AI 对手 */
+  aiEnabled: boolean;
+  /** AI 思考中 */
+  aiThinking: boolean;
 }
 
 interface HistoryEntry {
@@ -67,6 +72,7 @@ type Action =
   | { type: 'RESTART' }
   | { type: 'TOGGLE_FIVE' }
   | { type: 'TOGGLE_NO_REPEAT' }
+  | { type: 'TOGGLE_AI' }
   | { type: 'REFRESH_BOARDS' }
   | { type: 'UNDO' };
 
@@ -119,6 +125,8 @@ function createInitialState(boardIndex: number, boards: Board[]): FullState {
     moveCount: 0,
     boardHashes: new Set([boardHash(gameState)]),
     noRepeat: false,
+    aiEnabled: false,
+    aiThinking: false,
   };
 }
 
@@ -173,6 +181,9 @@ function gameReducer(state: FullState, action: Action): FullState {
 
     case 'TOGGLE_NO_REPEAT':
       return { ...state, noRepeat: !state.noRepeat };
+
+    case 'TOGGLE_AI':
+      return { ...state, aiEnabled: !state.aiEnabled };
 
     case 'REFRESH_BOARDS':
       return {
@@ -273,12 +284,15 @@ export interface UseGameReturn {
   lastMove: number | null;
   canUndo: boolean;
   noRepeat: boolean;
+  aiEnabled: boolean;
+  aiThinking: boolean;
   selectBoard: (index: number) => void;
   handlePlay: (nodeID: number) => void;
   pass: () => void;
   restart: () => void;
   toggleFiveRule: () => void;
   toggleNoRepeat: () => void;
+  toggleAI: () => void;
   refreshBoards: () => void;
   undo: () => void;
 }
@@ -298,6 +312,7 @@ export function useGame(): UseGameReturn {
   const restart = useCallback(() => dispatch({ type: 'RESTART' }), []);
   const toggleFiveRule = useCallback(() => dispatch({ type: 'TOGGLE_FIVE' }), []);
   const toggleNoRepeat = useCallback(() => dispatch({ type: 'TOGGLE_NO_REPEAT' }), []);
+  const toggleAI = useCallback(() => dispatch({ type: 'TOGGLE_AI' }), []);
   const refreshBoards = useCallback(() => dispatch({ type: 'REFRESH_BOARDS' }), []);
   const undo = useCallback(() => dispatch({ type: 'UNDO' }), []);
 
@@ -311,6 +326,28 @@ export function useGame(): UseGameReturn {
       try { Taro.eventCenter?.off?.('boards-updated', handler); } catch {}
     };
   }, []);
+
+  // AI 对手自动落子
+  useEffect(() => {
+    if (!state.aiEnabled || state.meta.ended || state.aiThinking) return;
+    // AI 执白（后手）
+    if (state.meta.next !== 2) return;
+
+    const board = (state.allBoards[state.boardIndex] || BOARDS[0]);
+    const timer = setTimeout(() => {
+      const aiMove = pickAIMove(
+        board.adj, state.gameState, state.stoneStrings, 2, board.p, DEFAULT_AI_CONFIG,
+      );
+      if (aiMove != null) {
+        dispatch({ type: 'PLAY', nodeID: aiMove });
+      } else {
+        // AI 无子可下，pass
+        dispatch({ type: 'PASS' });
+      }
+    }, DEFAULT_AI_CONFIG.thinkMs);
+
+    return () => clearTimeout(timer);
+  }, [state.aiEnabled, state.meta.next, state.meta.ended, state.aiThinking, state.boardIndex, state.gameState, state.stoneStrings, state.allBoards]);
 
   return {
     gameState: state.gameState,
@@ -327,12 +364,15 @@ export function useGame(): UseGameReturn {
     lastMove: state.lastMove,
     canUndo: state.history.length > 0 && !state.meta.ended,
     noRepeat: state.noRepeat,
+    aiEnabled: state.aiEnabled,
+    aiThinking: state.aiThinking,
     selectBoard,
     handlePlay,
     pass,
     restart,
     toggleFiveRule,
     toggleNoRepeat,
+    toggleAI,
     refreshBoards,
     undo,
   };

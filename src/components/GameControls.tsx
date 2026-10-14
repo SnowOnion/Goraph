@@ -14,6 +14,8 @@ interface GameControlsProps {
   moveCount: number;
   showNumbers: boolean;
   noRepeat: boolean;
+  aiEnabled: boolean;
+  aiThinking: boolean;
   info: string;
   onSelectBoard: (index: number) => void;
   onRestart: () => void;
@@ -21,6 +23,7 @@ interface GameControlsProps {
   onToggleFiveRule: () => void;
   onToggleShowNumbers: () => void;
   onToggleNoRepeat: () => void;
+  onToggleAI: () => void;
   onUndo: () => void;
 }
 
@@ -40,6 +43,8 @@ export function GameControls({
   moveCount,
   showNumbers,
   noRepeat,
+  aiEnabled,
+  aiThinking,
   info,
   onSelectBoard,
   onRestart,
@@ -47,6 +52,7 @@ export function GameControls({
   onToggleFiveRule,
   onToggleShowNumbers,
   onToggleNoRepeat,
+  onToggleAI,
   onUndo,
 }: GameControlsProps) {
   const boardOptions = allBoards.map((b, i) => ({ label: b.name, value: i }));
@@ -288,6 +294,43 @@ export function GameControls({
             position: 'absolute',
             top: '2px',
             left: noRepeat ? '24px' : '2px',
+            transition: 'left 0.2s',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+          }} />
+        </View>
+      </View>
+
+      {/* AI 开关 */}
+      <View style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        padding: '8px 0',
+      }}>
+        <Text style={{ fontSize: '14px', color: '#777' }}>
+          {aiThinking ? '🤖 AI 思考中...' : 'AI 对手'}
+        </Text>
+        <View
+          onClick={onToggleAI}
+          style={{
+            width: '48px',
+            height: '26px',
+            borderRadius: '13px',
+            backgroundColor: aiEnabled ? '#9C27B0' : '#ccc',
+            position: 'relative',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s',
+          }}
+        >
+          <View style={{
+            width: '22px',
+            height: '22px',
+            borderRadius: '50%',
+            backgroundColor: '#fff',
+            position: 'absolute',
+            top: '2px',
+            left: aiEnabled ? '24px' : '2px',
             transition: 'left 0.2s',
             boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
           }} />

@@ -48,12 +48,15 @@ export default function Index() {
     canUndo,
     moveCount,
     noRepeat,
+    aiEnabled,
+    aiThinking,
     selectBoard,
     handlePlay,
     pass,
     restart,
     toggleFiveRule,
     toggleNoRepeat,
+    toggleAI,
     refreshBoards,
     undo,
   } = useGame();
@@ -129,6 +132,7 @@ export default function Index() {
         onToggleFiveRule={toggleFiveRule}
         onToggleShowNumbers={() => setShowNumbers((p) => !p)}
         onToggleNoRepeat={toggleNoRepeat}
+        onToggleAI={toggleAI}
         onUndo={undo}
       />
 
