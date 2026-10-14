@@ -33,6 +33,11 @@ playwright/.cache/
 # Personal dev config
 opencode.json
 
+# Root-level duplicates (canonical location is src/static/)
+/manifest.json
+/sw.js
+/icons/
+
 # Chrome debugging
 /chrome-debug/
 
