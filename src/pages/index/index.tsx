@@ -4,7 +4,9 @@ import { Text } from '@/components/Text';
 import Taro, { useReady } from '@tarojs/taro';
 import { BoardCanvas } from '@/components/BoardCanvas';
 import { GameControls } from '@/components/GameControls';
+import { GameEndDialog } from '@/components/GameEndDialog';
 import { useGame } from '@/hooks/useGame';
+import { calculateScore } from '@/core/game-engine';
 
 export default function Index() {
   const [canvasSize, setCanvasSize] = useState({ width: 350, height: 350 });
@@ -138,6 +140,16 @@ export default function Index() {
         onToggleNoRepeat={toggleNoRepeat}
         onToggleAI={toggleAI}
         onUndo={undo}
+      />
+
+      {/* 终局弹窗 */}
+      <GameEndDialog
+        ended={meta.ended}
+        isNextBlack={meta.next === 1}
+        blackScore={calculateScore(gameState, adj, meta).black}
+        whiteScore={calculateScore(gameState, adj, meta).white}
+        onRestart={restart}
+        onContinue={() => {}}
       />
 
       {/* 编辑器入口 */}
