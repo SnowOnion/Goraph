@@ -12,6 +12,10 @@ export interface GameMeta {
   passed: number;
   ended: boolean;
   _nextStoneStringID: number;
+  /** 黑方提子数 */
+  capturedByBlack: number;
+  /** 白方提子数 */
+  capturedByWhite: number;
 }
 
 export function oppoColor(color: StoneColor): StoneColor {
@@ -31,6 +35,52 @@ export function boardHash(gameState: GameState): string {
   return hash;
 }
 
+/**
+ * 计算终局得分（中国规则简化版）
+ * 得分 = 活棋子数 + 围住的空点数 + 提子数
+ */
+export function calculateScore(
+  gameState: GameState,
+  adj: AdjacencyList,
+  meta: GameMeta,
+): { black: number; white: number } {
+  let blackStones = 0;
+  let whiteStones = 0;
+  let blackTerritory = 0;
+  let whiteTerritory = 0;
+
+  // 计算活棋子
+  for (const id in gameState) {
+    const s = gameState[parseInt(id)].s;
+    if (s === 1) blackStones++;
+    else if (s === 2) whiteStones++;
+  }
+
+  // 计算领地（简单版：空点相邻只有己方棋子则算领地）
+  for (const id in gameState) {
+    const nodeID = parseInt(id);
+    if (gameState[nodeID].s !== 0) continue;
+
+    const neighbors = adj[nodeID];
+    let touchesBlack = false;
+    let touchesWhite = false;
+
+    for (const nid of neighbors) {
+      const ns = gameState[nid].s;
+      if (ns === 1) touchesBlack = true;
+      else if (ns === 2) touchesWhite = true;
+    }
+
+    if (touchesBlack && !touchesWhite) blackTerritory++;
+    else if (touchesWhite && !touchesBlack) whiteTerritory++;
+  }
+
+  return {
+    black: blackStones + blackTerritory + meta.capturedByBlack,
+    white: whiteStones + whiteTerritory + meta.capturedByWhite,
+  };
+}
+
 /** 初始化游戏状态 */
 export function initGameState(adj: AdjacencyList): GameState {
   const state: GameState = {};
@@ -42,7 +92,7 @@ export function initGameState(adj: AdjacencyList): GameState {
 
 /** 初始化元数据 */
 export function initGameMeta(): GameMeta {
-  return { next: 1, passed: 0, ended: false, _nextStoneStringID: 0 };
+  return { next: 1, passed: 0, ended: false, _nextStoneStringID: 0, capturedByBlack: 0, capturedByWhite: 0 };
 }
 
 /** 初始化棋串映射 */
@@ -123,7 +173,7 @@ export function validWrtRuleAndUpdate(
   buildOrMergeSS(adj, gameState, stoneStrings, meta, nodeID, color, neighborMySSs);
 
   // 5. 给敌方紧气，可能提子
-  affectOpponents(adj, gameState, stoneStrings, nodeID, color, neighborOppoSSs);
+  affectOpponents(adj, gameState, meta, nodeID, color, neighborOppoSSs);
 
   return true;
 }
@@ -174,6 +224,7 @@ function affectOpponents(
   adj: AdjacencyList,
   gameState: GameState,
   stoneStrings: StoneStringsMap,
+  meta: GameMeta,
   nodeID: number,
   newStoneColor: StoneColor,
   neighborOppoSSs: Set<number>,
@@ -182,8 +233,15 @@ function affectOpponents(
     if (!stoneStrings[ssid]) continue;
     stoneStrings[ssid].chiSet.delete(nodeID);
     if (stoneStrings[ssid].chiSet.size === 0) {
+      const captured = stoneStrings[ssid].nodes.size;
       removeStoneString(adj, gameState, stoneStrings, ssid, oppoColor(newStoneColor));
       delete stoneStrings[ssid];
+      // 统计提子
+      if (newStoneColor === 1) {
+        meta.capturedByBlack += captured;
+      } else {
+        meta.capturedByWhite += captured;
+      }
     }
   }
 }

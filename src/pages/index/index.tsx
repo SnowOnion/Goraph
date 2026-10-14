@@ -125,6 +125,10 @@ export default function Index() {
         moveCount={moveCount}
         showNumbers={showNumbers}
         noRepeat={noRepeat}
+        aiEnabled={aiEnabled}
+        aiThinking={aiThinking}
+        capturedBlack={meta.capturedByBlack}
+        capturedWhite={meta.capturedByWhite}
         info={info}
         onSelectBoard={selectBoard}
         onRestart={restart}

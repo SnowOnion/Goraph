@@ -16,6 +16,8 @@ interface GameControlsProps {
   noRepeat: boolean;
   aiEnabled: boolean;
   aiThinking: boolean;
+  capturedBlack: number;
+  capturedWhite: number;
   info: string;
   onSelectBoard: (index: number) => void;
   onRestart: () => void;
@@ -45,6 +47,8 @@ export function GameControls({
   noRepeat,
   aiEnabled,
   aiThinking,
+  capturedBlack,
+  capturedWhite,
   info,
   onSelectBoard,
   onRestart,
@@ -334,6 +338,25 @@ export function GameControls({
             transition: 'left 0.2s',
             boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
           }} />
+        </View>
+      </View>
+
+      {/* 提子统计 */}
+      <View style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '20px',
+        padding: '4px 0',
+        fontSize: '13px',
+        color: '#888',
+      }}>
+        <View style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <View style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#1a1a1a' }} />
+          <Text>提 {capturedBlack}</Text>
+        </View>
+        <View style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <View style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#f0f0f0', border: '1px solid #aaa' }} />
+          <Text>提 {capturedWhite}</Text>
         </View>
       </View>
 
