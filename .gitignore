@@ -33,6 +33,9 @@ playwright/.cache/
 # Personal dev config
 opencode.json
 
+# Chrome debugging
+/chrome-debug/
+
 # Keep these (source files)
 # !src/static/manifest.json
 # !src/static/sw.js

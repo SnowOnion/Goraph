@@ -18,6 +18,7 @@ import {
   executePass,
   oppoColor,
   initStoneStrings,
+  boardHash,
 } from '@/core/game-engine';
 import { checkFiveWinning } from '@/core/five';
 import { AdjacencyList, PositionsMap, GameState, StoneStringsMap } from '@/core/types';
@@ -43,6 +44,10 @@ interface FullState {
   lastMove: number | null;
   /** 总手数 */
   moveCount: number;
+  /** 已出现的棋盘哈希集合（禁止全同再现） */
+  boardHashes: Set<string>;
+  /** 是否启用禁止全同再现规则 */
+  noRepeat: boolean;
 }
 
 interface HistoryEntry {
@@ -61,6 +66,7 @@ type Action =
   | { type: 'PASS' }
   | { type: 'RESTART' }
   | { type: 'TOGGLE_FIVE' }
+  | { type: 'TOGGLE_NO_REPEAT' }
   | { type: 'REFRESH_BOARDS' }
   | { type: 'UNDO' };
 
@@ -98,9 +104,10 @@ function pushHistory(state: FullState): HistoryEntry {
 
 function createInitialState(boardIndex: number, boards: Board[]): FullState {
   const board = boards[boardIndex] || BOARDS[0];
+  const gameState = initGameState(board.adj);
   return {
     boardIndex,
-    gameState: initGameState(board.adj),
+    gameState,
     stoneStrings: initStoneStrings(),
     meta: initGameMeta(),
     info: '请点击或触摸下棋。',
@@ -110,6 +117,8 @@ function createInitialState(boardIndex: number, boards: Board[]): FullState {
     moveNumbers: {},
     lastMove: null,
     moveCount: 0,
+    boardHashes: new Set([boardHash(gameState)]),
+    noRepeat: false,
   };
 }
 
@@ -162,6 +171,9 @@ function gameReducer(state: FullState, action: Action): FullState {
     case 'TOGGLE_FIVE':
       return { ...state, hasFiveRule: !state.hasFiveRule };
 
+    case 'TOGGLE_NO_REPEAT':
+      return { ...state, noRepeat: !state.noRepeat };
+
     case 'REFRESH_BOARDS':
       return {
         ...state,
@@ -189,6 +201,14 @@ function gameReducer(state: FullState, action: Action): FullState {
 
       if (!valid) {
         return { ...state, info: '这一手不合规则。' };
+      }
+
+      // 禁止全同再现规则
+      if (state.noRepeat) {
+        const newHash = boardHash(gameState);
+        if (state.boardHashes.has(newHash)) {
+          return { ...state, info: '禁止全同再现（打劫规则）。' };
+        }
       }
 
       flipColor(meta);
@@ -223,6 +243,9 @@ function gameReducer(state: FullState, action: Action): FullState {
         lastMove: nodeID,
         moveCount: newMoveCount,
         history: [...state.history, pushHistory(state)],
+        boardHashes: state.noRepeat
+          ? new Set([...state.boardHashes, boardHash(gameState)])
+          : state.boardHashes,
       };
     }
 
@@ -249,11 +272,13 @@ export interface UseGameReturn {
   moveNumbers: Record<number, number>;
   lastMove: number | null;
   canUndo: boolean;
+  noRepeat: boolean;
   selectBoard: (index: number) => void;
   handlePlay: (nodeID: number) => void;
   pass: () => void;
   restart: () => void;
   toggleFiveRule: () => void;
+  toggleNoRepeat: () => void;
   refreshBoards: () => void;
   undo: () => void;
 }
@@ -272,6 +297,7 @@ export function useGame(): UseGameReturn {
   const pass = useCallback(() => dispatch({ type: 'PASS' }), []);
   const restart = useCallback(() => dispatch({ type: 'RESTART' }), []);
   const toggleFiveRule = useCallback(() => dispatch({ type: 'TOGGLE_FIVE' }), []);
+  const toggleNoRepeat = useCallback(() => dispatch({ type: 'TOGGLE_NO_REPEAT' }), []);
   const refreshBoards = useCallback(() => dispatch({ type: 'REFRESH_BOARDS' }), []);
   const undo = useCallback(() => dispatch({ type: 'UNDO' }), []);
 
@@ -300,11 +326,13 @@ export function useGame(): UseGameReturn {
     moveNumbers: state.moveNumbers,
     lastMove: state.lastMove,
     canUndo: state.history.length > 0 && !state.meta.ended,
+    noRepeat: state.noRepeat,
     selectBoard,
     handlePlay,
     pass,
     restart,
     toggleFiveRule,
+    toggleNoRepeat,
     refreshBoards,
     undo,
   };

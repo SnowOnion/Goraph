@@ -6,7 +6,8 @@ export default defineConfig({
   timeout: 60000,
   use: {
     baseURL: 'http://localhost:10086',
-    headless: true,   // headless 模式，后台运行（快，不闪眼）
+    headless: true,   // headless 模式，不弹窗（默认）
+    // headless: false, // headed 模式，能看到浏览器窗口（会抢焦点）
     screenshot: 'on',
     video: 'retain-on-failure',
   },

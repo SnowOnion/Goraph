@@ -47,11 +47,13 @@ export default function Index() {
     lastMove,
     canUndo,
     moveCount,
+    noRepeat,
     selectBoard,
     handlePlay,
     pass,
     restart,
     toggleFiveRule,
+    toggleNoRepeat,
     refreshBoards,
     undo,
   } = useGame();
@@ -119,12 +121,14 @@ export default function Index() {
         canUndo={canUndo}
         moveCount={moveCount}
         showNumbers={showNumbers}
+        noRepeat={noRepeat}
         info={info}
         onSelectBoard={selectBoard}
         onRestart={restart}
         onPass={pass}
         onToggleFiveRule={toggleFiveRule}
         onToggleShowNumbers={() => setShowNumbers((p) => !p)}
+        onToggleNoRepeat={toggleNoRepeat}
         onUndo={undo}
       />
 

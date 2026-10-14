@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { View, Canvas } from '@tarojs/components';
+import Taro from '@tarojs/taro';
 import { isWeapp } from '@/core/env';
 import { AdjacencyList, PositionsMap, GameState } from '@/core/types';
 
@@ -41,14 +42,30 @@ export function BoardCanvas({
   const previewRef = useRef<number | null>(null);
 
   const drawScene = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    let ctx: CanvasRenderingContext2D | null = null;
+    let cw = 0;
+    let ch = 0;
+    let dpr = 1;
+    let canvas: any = null;
 
-    const dpr = dprRef.current;
-    const cw = canvas.width / dpr;
-    const ch = canvas.height / dpr;
+    if (isWeapp) {
+      const weappCtx = weappCtxRef.current;
+      if (!weappCtx) return;
+      ctx = weappCtx.ctx;
+      canvas = weappCtx.canvas;
+      dpr = weappCtx.dpr;
+      cw = canvas.width / dpr;
+      ch = canvas.height / dpr;
+    } else {
+      canvas = canvasRef.current;
+      if (!canvas) return;
+      ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      dpr = dprRef.current;
+      cw = canvas.width / dpr;
+      ch = canvas.height / dpr;
+    }
+
     const scale = scaleRef.current;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -183,10 +200,9 @@ export function BoardCanvas({
     dprRef.current = dpr;
     canvas.width = canvasWidth * dpr;
     canvas.height = canvasHeight * dpr;
-    const scale = Math.min(canvasWidth, canvasHeight) / BOARD_COORDS_SIZE;
-    scaleRef.current = scale;
+    scaleRef.current = Math.min(canvasWidth, canvasHeight) / BOARD_COORDS_SIZE;
     drawScene();
-  }, [canvasWidth, canvasHeight, drawScene]);
+  }, [canvasWidth, canvasHeight]);
 
   /* ---- 交互（H5 only） ---- */
   const handlePreview = useCallback((clientX: number, clientY: number) => {
@@ -278,15 +294,28 @@ export function BoardCanvas({
   }, [redraw]);
 
   /* ---- 小程序模式：Taro Canvas ---- */
-  const taroCanvasRef = useRef<any>(null);
+  const weappCtxRef = useRef<any>(null);
 
-  useEffect(() => {
+  const onCanvasReady = useCallback(() => {
     if (!isWeapp) return;
-    // 小程序 Canvas 初始化在 canvasReady 回调中
-  }, []);
-
-  // TODO: 小程序 Canvas 2D 渲染实现
-  // 需要：1. canvasReady 回调获取 context 2. 同样的绘制逻辑 3. 触摸事件
+    Taro.createSelectorQuery()
+      .select('#boardCanvas')
+      .fields({ node: true, size: true })
+      .exec((res: any) => {
+        if (res && res[0] && res[0].node) {
+          const canvas = res[0].node;
+          const ctx = canvas.getContext('2d');
+          const dpr = Taro.getSystemInfoSync().pixelRatio || 1;
+          canvas.width = canvasWidth * dpr;
+          canvas.height = canvasHeight * dpr;
+          ctx.scale(dpr, dpr);
+          weappCtxRef.current = { canvas, ctx, dpr };
+          // 小程序里 scale 直接用 canvasWidth/1000
+          scaleRef.current = canvasWidth / BOARD_COORDS_SIZE;
+          drawScene();
+        }
+      });
+  }, [canvasWidth, canvasHeight]);
 
   if (isWeapp) {
     return (
@@ -295,11 +324,11 @@ export function BoardCanvas({
           type="2d"
           id="boardCanvas"
           style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px` }}
+          onReady={onCanvasReady}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         />
-        {/* TODO: 小程序绘制逻辑 */}
       </View>
     );
   }

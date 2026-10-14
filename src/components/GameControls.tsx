@@ -13,12 +13,14 @@ interface GameControlsProps {
   canUndo: boolean;
   moveCount: number;
   showNumbers: boolean;
+  noRepeat: boolean;
   info: string;
   onSelectBoard: (index: number) => void;
   onRestart: () => void;
   onPass: () => void;
   onToggleFiveRule: () => void;
   onToggleShowNumbers: () => void;
+  onToggleNoRepeat: () => void;
   onUndo: () => void;
 }
 
@@ -37,12 +39,14 @@ export function GameControls({
   canUndo,
   moveCount,
   showNumbers,
+  noRepeat,
   info,
   onSelectBoard,
   onRestart,
   onPass,
   onToggleFiveRule,
   onToggleShowNumbers,
+  onToggleNoRepeat,
   onUndo,
 }: GameControlsProps) {
   const boardOptions = allBoards.map((b, i) => ({ label: b.name, value: i }));
@@ -255,12 +259,47 @@ export function GameControls({
         </View>
       )}
 
+      {/* 禁止全同再现 */}
+      <View style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        padding: '8px 0',
+      }}>
+        <Text style={{ fontSize: '14px', color: '#777' }}>禁止全同再现</Text>
+        <View
+          onClick={onToggleNoRepeat}
+          style={{
+            width: '48px',
+            height: '26px',
+            borderRadius: '13px',
+            backgroundColor: noRepeat ? '#4CAF50' : '#ccc',
+            position: 'relative',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s',
+          }}
+        >
+          <View style={{
+            width: '22px',
+            height: '22px',
+            borderRadius: '50%',
+            backgroundColor: '#fff',
+            position: 'absolute',
+            top: '2px',
+            left: noRepeat ? '24px' : '2px',
+            transition: 'left 0.2s',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+          }} />
+        </View>
+      </View>
+
       {/* 信息提示 */}
       <View style={{
         minHeight: '24px',
         textAlign: 'center',
         fontSize: '14px',
-        color: info.includes('不合规则') ? '#e53935' : '#888',
+        color: info.includes('不合规则') || info.includes('禁止全同') ? '#e53935' : '#888',
         padding: '4px 0',
       }}>
         {info}

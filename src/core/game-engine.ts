@@ -22,6 +22,15 @@ export function isEmpty(color: StoneColor): boolean {
   return color === 0;
 }
 
+/** 计算棋盘状态哈希（用于禁止全同再现规则） */
+export function boardHash(gameState: GameState): string {
+  let hash = '';
+  for (const id in gameState) {
+    hash += gameState[parseInt(id)].s;
+  }
+  return hash;
+}
+
 /** 初始化游戏状态 */
 export function initGameState(adj: AdjacencyList): GameState {
   const state: GameState = {};
