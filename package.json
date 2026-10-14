@@ -1,0 +1,47 @@
+{
+  "name": "goraph",
+  "version": "1.0.0",
+  "private": true,
+  "description": "围棋 on arbitrary graphs - Taro cross-platform app",
+  "scripts": {
+    "dev:h5": "taro build --type h5 --watch",
+    "build:h5": "taro build --type h5",
+    "dev:weapp": "taro build --type weapp --watch",
+    "build:weapp": "taro build --type weapp",
+    "build:all": "npm run build:h5 && npm run build:weapp",
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug"
+  },
+  "dependencies": {
+    "@tarojs/components": "3.6.35",
+    "@tarojs/helper": "3.6.35",
+    "@tarojs/plugin-framework-react": "3.6.35",
+    "@tarojs/plugin-platform-h5": "3.6.35",
+    "@tarojs/plugin-platform-weapp": "3.6.35",
+    "@tarojs/react": "^4.3.0",
+    "@tarojs/runtime": "3.6.35",
+    "@tarojs/shared": "3.6.35",
+    "@tarojs/taro": "3.6.35",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.0",
+    "@playwright/test": "^1.64.0",
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.6.3",
+    "@tarojs/cli": "3.6.35",
+    "@tarojs/webpack5-runner": "3.6.35",
+    "@types/react": "^18.2.0",
+    "@types/webpack-env": "^1.18.0",
+    "babel-preset-taro": "3.6.35",
+    "jest": "^29.0.0",
+    "playwright": "^1.64.0",
+    "react-refresh": "^0.19.0",
+    "react-test-renderer": "^18.2.0",
+    "tslib": "^2.6.0",
+    "typescript": "^5.3.0",
+    "webpack": "^5.78.0",
+    "webpack-cli": "^7.2.3"
+  }
+}

@@ -1,55 +1,38 @@
-### Lee
+# Dependencies
+node_modules/
 
-### https://github.com/github/gitignore/blob/master/Global/JetBrains.gitignore
-# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and WebStorm
-# Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
+# Build output
+dist/
 
-# User-specific stuff
-.idea/**/workspace.xml
-.idea/**/tasks.xml
-.idea/**/usage.statistics.xml
-.idea/**/dictionaries
-.idea/**/shelf
-
-# Sensitive or high-churn files
-.idea/**/dataSources/
-.idea/**/dataSources.ids
-.idea/**/dataSources.local.xml
-.idea/**/sqlDataSources.xml
-.idea/**/dynamic.xml
-.idea/**/uiDesigner.xml
-.idea/**/dbnavigator.xml
-
-# Gradle
-.idea/**/gradle.xml
-.idea/**/libraries
-
-# CMake
-cmake-build-*/
-
-# Mongo Explorer plugin
-.idea/**/mongoSettings.xml
-
-# File-based project format
+# IDE / Editor
+.idea/
 *.iws
+.vscode/
+.swc/
 
-# IntelliJ
-out/
+# OS
+.DS_Store
+Thumbs.db
 
-# mpeltonen/sbt-idea plugin
-.idea_modules/
+# Logs
+*.log
+npm-debug.log*
 
-# JIRA plugin
-atlassian-ide-plugin.xml
+# Environment
+.env
+.env.local
 
-# Cursive Clojure plugin
-.idea/replstate.xml
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
 
-# Crashlytics plugin (for Android Studio and IntelliJ)
-com_crashlytics_export_strings.xml
-crashlytics.properties
-crashlytics-build.properties
-fabric.properties
+# Taro
+.taro/
 
-# Editor-based Rest Client
-.idea/httpRequests
+# Personal dev config
+opencode.json
+
+# Keep these (source files)
+# !src/static/manifest.json
+# !src/static/sw.js

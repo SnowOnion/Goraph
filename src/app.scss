@@ -1,0 +1,14 @@
+page {
+  background-color: #f5f0e8;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* 全局禁止缩放（iOS 双击/捏合），使用 none 避免 passive event warning */
+html, body {
+  touch-action: none;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+  overflow: hidden;
+}
