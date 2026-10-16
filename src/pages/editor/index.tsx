@@ -27,6 +27,9 @@ export default function EditorPage() {
     tool,
     boardName,
     saveMessage,
+    savedNames,
+    canUndo,
+    canRedo,
     setTool,
     setBoardName,
     handleAddNode,
@@ -36,11 +39,12 @@ export default function EditorPage() {
     handleAddEdge,
     handleDeleteEdge,
     handleClear,
+    handleUndo,
+    handleRedo,
     handleSave,
     handleExport,
     handleLoad,
     handleDeleteBoard,
-    savedNames,
   } = useEditor();
 
   const nodeCount = Object.keys(state.positions).length;
@@ -156,6 +160,24 @@ export default function EditorPage() {
         flexWrap: 'wrap',
         justifyContent: 'center',
       }}>
+        <View onClick={canUndo ? handleUndo : undefined} style={{
+          padding: '10px 18px', borderRadius: '10px', fontSize: '14px',
+          backgroundColor: canUndo ? '#fff' : '#f5f5f5',
+          color: canUndo ? '#2196F3' : '#bbb',
+          border: `2px solid ${canUndo ? '#2196F3' : '#eee'}`,
+          cursor: canUndo ? 'pointer' : 'not-allowed',
+        }}>
+          ↩ 撤销
+        </View>
+        <View onClick={canRedo ? handleRedo : undefined} style={{
+          padding: '10px 18px', borderRadius: '10px', fontSize: '14px',
+          backgroundColor: canRedo ? '#fff' : '#f5f5f5',
+          color: canRedo ? '#2196F3' : '#bbb',
+          border: `2px solid ${canRedo ? '#2196F3' : '#eee'}`,
+          cursor: canRedo ? 'pointer' : 'not-allowed',
+        }}>
+          ↪ 重做
+        </View>
         <View onClick={handleClear} style={{
           padding: '10px 18px', borderRadius: '10px', fontSize: '14px',
           backgroundColor: '#fff', color: '#666', border: '2px solid #ddd', cursor: 'pointer',

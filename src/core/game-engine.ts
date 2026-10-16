@@ -173,7 +173,7 @@ export function validWrtRuleAndUpdate(
   buildOrMergeSS(adj, gameState, stoneStrings, meta, nodeID, color, neighborMySSs);
 
   // 5. 给敌方紧气，可能提子
-  affectOpponents(adj, gameState, meta, nodeID, color, neighborOppoSSs);
+  affectOpponents(adj, gameState, stoneStrings, meta, nodeID, color, neighborOppoSSs);
 
   return true;
 }
