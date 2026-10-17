@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { View } from '@tarojs/components';
 import { Text } from './Text';
 
@@ -10,7 +11,10 @@ interface GameEndDialogProps {
 }
 
 export function GameEndDialog({ ended, blackScore, whiteScore, onRestart, onContinue }: GameEndDialogProps) {
-  if (!ended) return null;
+  const [dismissed, setDismissed] = useState(false);
+  // Reset dismissed when a new game starts
+  useEffect(() => { if (!ended) setDismissed(false); }, [ended]);
+  if (!ended || dismissed) return null;
 
   const diff = blackScore - whiteScore;
   const winner = diff > 0 ? '黑棋' : diff < 0 ? '白棋' : '和棋';
@@ -18,9 +22,10 @@ export function GameEndDialog({ ended, blackScore, whiteScore, onRestart, onCont
   return (
     <View style={{
       position: 'fixed', inset: 0,
-      backgroundColor: 'rgba(0,0,0,0.7)',
+      backgroundColor: 'rgba(0,0,0,0.5)',
       display: 'flex', justifyContent: 'center', alignItems: 'center',
       zIndex: 200,
+      pointerEvents: 'none',
     }}>
       <View style={{
         backgroundColor: '#16213e',
@@ -30,7 +35,24 @@ export function GameEndDialog({ ended, blackScore, whiteScore, onRestart, onCont
         maxWidth: '85vw',
         textAlign: 'center',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        pointerEvents: 'auto',
       }}>
+        <View style={{
+          position: 'absolute',
+          top: 10,
+          right: 10,
+          width: 28,
+          height: 28,
+          borderRadius: '50%',
+          backgroundColor: '#0f3460',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }} onClick={() => setDismissed(true)}>
+          <Text style={{ fontSize: 14, color: '#888' }}>✕</Text>
+        </View>
+
         <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#e0e0e0', marginBottom: 16 }}>
           对局结束
         </Text>

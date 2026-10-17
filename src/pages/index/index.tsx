@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { View } from '@tarojs/components';
 import { Text } from '@/components/Text';
-import { BOARDS } from '@/core/boards';
 import { GameEndDialog } from '@/components/GameEndDialog';
 import { BoardCanvas } from '@/components/BoardCanvas';
 import { useGame } from '@/hooks/useGame';
@@ -10,18 +9,27 @@ import Taro, { useReady, useDidShow } from '@tarojs/taro';
 import './index.scss';
 
 export default function Index() {
+  console.log('[INDEX] component function called');
   const [canvasSize, setCanvasSize] = useState({ width: 350, height: 350 });
   const [showSettings, setShowSettings] = useState(false);
   const [showNumbers, setShowNumbers] = useState(true);
+  const [gameId, setGameId] = useState(0);
 
-  const calcCanvasSize = () => {
+  const calcCanvasSize = useCallback(() => {
     const sysInfo = Taro.getSystemInfoSync();
     const maxSize = Math.min(sysInfo.windowWidth - 32, sysInfo.windowHeight * 0.48, 480);
     setCanvasSize({ width: Math.floor(maxSize), height: Math.floor(maxSize) });
-  };
+  }, []);
 
   useReady(() => calcCanvasSize());
   useDidShow(() => calcCanvasSize());
+
+  // 屏幕旋转/尺寸变化
+  useEffect(() => {
+    const handler = () => calcCanvasSize();
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, [calcCanvasSize]);
 
   const {
     gameState, meta, adj, positions, boardIndex, allBoards, info,
@@ -32,6 +40,13 @@ export default function Index() {
     toggleNoRepeat, toggleAI, undo,
   } = useGame();
 
+  // 用于通知 BoardCanvas 游戏已重启（必须在 useGame 之后定义）
+  const triggerRestart = useCallback(() => {
+    console.log('[RESTART] triggerRestart called');
+    setGameId(id => id + 1);
+    restart();
+  }, [restart]);
+
   return (
     <View className="game-page">
       {/* 顶栏 */}
@@ -39,6 +54,7 @@ export default function Index() {
         <View className="turn-indicator">
           <View className={`stone-icon ${meta.next === 1 ? 'black' : 'white'}`} />
           <Text className="turn-text">{meta.next === 1 ? '黑棋' : '白棋'}落子</Text>
+
         </View>
         <View className="capture-info">
           <View className="capture-item">
@@ -55,6 +71,7 @@ export default function Index() {
       {/* 棋盘 */}
       <View className="board-container">
         <BoardCanvas
+          key={gameId}
           adj={adj}
           positions={positions}
           gameState={gameState}
@@ -77,7 +94,7 @@ export default function Index() {
           <Text className="action-icon">⏭</Text>
           <Text className="action-label">PASS</Text>
         </View>
-        <View className="action-btn" onClick={restart}>
+        <View className="action-btn" onClick={triggerRestart}>
           <Text className="action-icon">🔄</Text>
           <Text className="action-label">重来</Text>
         </View>
@@ -164,7 +181,7 @@ export default function Index() {
         ended={meta.ended}
         blackScore={calculateScore(gameState, adj, meta).black}
         whiteScore={calculateScore(gameState, adj, meta).white}
-        onRestart={restart}
+        onRestart={triggerRestart}
         onContinue={() => {}}
       />
     </View>

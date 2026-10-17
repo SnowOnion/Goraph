@@ -40,7 +40,7 @@ export function BoardCanvas(props: BoardCanvasProps) {
   const paint = () => {
     const gs = gsRef.current;
     const pos = posRef.current;
-    const adj = adjRef.current;
+    const a = adjRef.current;
     const c = cRef.current;
     if (!c) return;
     const ctx = c.getContext('2d');
@@ -54,15 +54,15 @@ export function BoardCanvas(props: BoardCanvasProps) {
     ctx.save();
     ctx.scale(dpr, dpr);
 
-    ctx.fillStyle = '#f5f0e8';
+    ctx.fillStyle = '#e8d5b0';
     ctx.fillRect(0, 0, cw, ch);
 
     ctx.strokeStyle = '#999';
     ctx.lineWidth = Math.max(1, scale * 1.5);
     for (const k1 in pos) {
       const n1 = parseInt(k1);
-      if (!adj[n1]) continue;
-      for (const n2 of adj[n1]) {
+      if (!a[n1]) continue;
+      for (const n2 of a[n1]) {
         if (n1 <= n2) {
           ctx.beginPath();
           ctx.moveTo(pos[n1].x * scale, pos[n1].y * scale);
@@ -172,36 +172,29 @@ export function BoardCanvas(props: BoardCanvasProps) {
     if (nid != null && gs[nid]?.s === 0) onPlay(nid);
   }, [onPlay]);
 
-  // 初始化绑定
-  useEffect(() => {
-    let disposed = false;
-    const init = () => {
-      if (disposed) return;
-      const canvas = document.querySelector('canvas');
-      if (!canvas) return;
+  // 用 callback ref 确保每次 canvas 创建/重新创建都绑定事件
+  const canvasRef = useCallback((node: HTMLCanvasElement | null) => {
+    if (!node) return;
+    cRef.current = node;
 
-      const dpr = window.devicePixelRatio || 1;
-      dprRef.current = dpr;
-      canvas.width = canvasWidth * dpr;
-      canvas.height = canvasHeight * dpr;
-      scaleRef.current = Math.min(canvasWidth, canvasHeight) / BOARD_COORDS_SIZE;
-      cRef.current = canvas;
-      paint();
+    const dpr = window.devicePixelRatio || 1;
+    dprRef.current = dpr;
+    node.width = canvasWidth * dpr;
+    node.height = canvasHeight * dpr;
+    scaleRef.current = Math.min(canvasWidth, canvasHeight) / BOARD_COORDS_SIZE;
+    paint();
 
-      const onMd = (e: MouseEvent) => { pressing.current = true; doPreview(e.clientX, e.clientY); };
-      const onMu = () => { if (pressing.current) doPlay(); };
-      const onMl = () => { pressing.current = false; preview.current = null; paint(); };
-      const onTs = (e: TouchEvent) => { e.preventDefault(); pressing.current = true; const t = e.touches[0]; if (t) doPreview(t.clientX, t.clientY); };
-      const onTe = (e: TouchEvent) => { e.preventDefault(); if (pressing.current) doPlay(); };
+    const onMd = (e: MouseEvent) => { pressing.current = true; doPreview(e.clientX, e.clientY); };
+    const onMu = () => { if (pressing.current) doPlay(); };
+    const onMl = () => { pressing.current = false; preview.current = null; paint(); };
+    const onTs = (e: TouchEvent) => { e.preventDefault(); pressing.current = true; const t = e.touches[0]; if (t) doPreview(t.clientX, t.clientY); };
+    const onTe = (e: TouchEvent) => { e.preventDefault(); if (pressing.current) doPlay(); };
 
-      canvas.addEventListener('mousedown', onMd);
-      canvas.addEventListener('mouseup', onMu);
-      canvas.addEventListener('mouseleave', onMl);
-      canvas.addEventListener('touchstart', onTs, { passive: false });
-      canvas.addEventListener('touchend', onTe, { passive: false });
-    };
-    const timer = setTimeout(init, 50);
-    return () => { disposed = true; clearTimeout(timer); };
+    node.addEventListener('mousedown', onMd);
+    node.addEventListener('mouseup', onMu);
+    node.addEventListener('mouseleave', onMl);
+    node.addEventListener('touchstart', onTs, { passive: false });
+    node.addEventListener('touchend', onTe, { passive: false });
   }, [canvasWidth, canvasHeight, doPreview, doPlay]);
 
   // 状态变化时重绘
@@ -209,13 +202,13 @@ export function BoardCanvas(props: BoardCanvasProps) {
 
   return (
     <canvas
+      ref={canvasRef}
       style={{
         width: `${canvasWidth}px`,
         height: `${canvasHeight}px`,
         touchAction: 'none',
         display: 'block',
         borderRadius: '8px',
-        background: '#e8d5b0',
       }}
     />
   );
