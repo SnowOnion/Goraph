@@ -1,6 +1,6 @@
 {
   "name": "goraph",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "private": true,
   "description": "围棋 on arbitrary graphs - Taro cross-platform app",
   "scripts": {

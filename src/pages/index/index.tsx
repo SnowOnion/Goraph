@@ -182,7 +182,7 @@ export default function Index() {
         padding: '16px 0 24px',
         textAlign: 'center',
       }}>
-        <View>Goraph v1.0 · 任意图上的围棋</View>
+        <View>Goraph v0.5.0 · 任意图上的围棋</View>
         <View style={{ marginTop: '4px', color: '#4CAF50' }}>
           github.com/SnowOnion/Goraph
         </View>

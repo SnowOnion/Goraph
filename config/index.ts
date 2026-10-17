@@ -33,7 +33,7 @@ const config = {
     },
   },
   cache: {
-    enable: false,
+    enable: true,
   },
   mini: {
     postcss: {

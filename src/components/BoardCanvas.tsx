@@ -204,6 +204,12 @@ export function BoardCanvas({
     drawScene();
   }, [canvasWidth, canvasHeight]);
 
+  // 游戏状态变化时重绘
+  useEffect(() => {
+    if (isWeapp) return;
+    drawScene();
+  }, [gameState, adj, positions, moveNumbers, lastMove, showMoveNumbers]);
+
   /* ---- 交互（H5 only） ---- */
   const handlePreview = useCallback((clientX: number, clientY: number) => {
     if (isWeapp) return;
