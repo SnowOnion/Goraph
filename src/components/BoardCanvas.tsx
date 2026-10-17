@@ -41,12 +41,32 @@ export function BoardCanvas({
   const pressingRef = useRef(false);
   const previewRef = useRef<number | null>(null);
 
-  const drawScene = useCallback(() => {
-    let ctx: CanvasRenderingContext2D | null = null;
-    let cw = 0;
-    let ch = 0;
-    let dpr = 1;
+  // 用 ref 保持最新值，避免 useCallback 闭包捕获旧状态
+  const gameStateRef = useRef(gameState);
+  const adjRef = useRef(adj);
+  const positionsRef = useRef(positions);
+  const moveNumbersRef = useRef(moveNumbers);
+  const lastMoveRef = useRef(lastMove);
+  const showNumbersRef = useRef(showMoveNumbers);
+  gameStateRef.current = gameState;
+  adjRef.current = adj;
+  positionsRef.current = positions;
+  moveNumbersRef.current = moveNumbers;
+  lastMoveRef.current = lastMove;
+  showNumbersRef.current = showMoveNumbers;
+
+  // 绘制函数：从 ref 读取最新状态，不使用 useCallback 避免闭包捕获
+  const drawScene = () => {
+    const gs = gameStateRef.current;
+    const adj = adjRef.current;
+    const pos = positionsRef.current;
+    const mns = moveNumbersRef.current;
+    const lm = lastMoveRef.current;
+    const sn = showNumbersRef.current;
+
     let canvas: any = null;
+    let ctx: CanvasRenderingContext2D | null = null;
+    let dpr = 1;
 
     if (isWeapp) {
       const weappCtx = weappCtxRef.current;
@@ -54,19 +74,17 @@ export function BoardCanvas({
       ctx = weappCtx.ctx;
       canvas = weappCtx.canvas;
       dpr = weappCtx.dpr;
-      cw = canvas.width / dpr;
-      ch = canvas.height / dpr;
     } else {
       canvas = canvasRef.current;
       if (!canvas) return;
       ctx = canvas.getContext('2d');
       if (!ctx) return;
       dpr = dprRef.current;
-      cw = canvas.width / dpr;
-      ch = canvas.height / dpr;
     }
 
     const scale = scaleRef.current;
+    const cw = canvas.width / dpr;
+    const ch = canvas.height / dpr;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
@@ -79,13 +97,13 @@ export function BoardCanvas({
     // 边
     ctx.strokeStyle = '#999';
     ctx.lineWidth = Math.max(1, scale * 1.5);
-    for (const id1 in positions) {
+    for (const id1 in pos) {
       const n1 = parseInt(id1);
       if (!adj[n1]) continue;
-      const p1 = positions[n1];
+      const p1 = pos[n1];
       for (const id2 of adj[n1]) {
         if (n1 <= id2) {
-          const p2 = positions[id2];
+          const p2 = pos[id2];
           ctx.beginPath();
           ctx.moveTo(p1.x * scale, p1.y * scale);
           ctx.lineTo(p2.x * scale, p2.y * scale);
@@ -95,11 +113,11 @@ export function BoardCanvas({
     }
 
     // 节点
-    for (const id in positions) {
-      const p = positions[parseInt(id)];
+    for (const id in pos) {
+      const p = pos[parseInt(id)];
       const px = p.x * scale;
       const py = p.y * scale;
-      const hasStone = gameState[parseInt(id)]?.s !== 0;
+      const hasStone = gs[parseInt(id)]?.s !== 0;
       ctx.fillStyle = hasStone ? 'transparent' : '#666';
       ctx.beginPath();
       ctx.arc(px, py, hasStone ? 0 : scale * 3, 0, Math.PI * 2);
@@ -108,10 +126,10 @@ export function BoardCanvas({
 
     // 棋子
     const stoneRadius = scale * 32;
-    for (const id in gameState) {
+    for (const id in gs) {
       const n = parseInt(id);
-      if (gameState[n].s === 0) continue;
-      const p = positions[n];
+      if (gs[n].s === 0) continue;
+      const p = pos[n];
       const px = p.x * scale;
       const py = p.y * scale;
 
@@ -120,7 +138,7 @@ export function BoardCanvas({
       ctx.shadowOffsetX = 1;
       ctx.shadowOffsetY = 2;
 
-      const isBlack = gameState[n].s === 1;
+      const isBlack = gs[n].s === 1;
       ctx.fillStyle = isBlack ? '#1a1a1a' : '#f5f5f5';
       ctx.beginPath();
       ctx.arc(px, py, stoneRadius, 0, Math.PI * 2);
@@ -150,7 +168,7 @@ export function BoardCanvas({
       ctx.stroke();
 
       // 最后一手高亮
-      if (lastMove === n) {
+      if (lm === n) {
         ctx.strokeStyle = '#ff5722';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
@@ -159,8 +177,8 @@ export function BoardCanvas({
       }
 
       // 落子序号
-      if (showMoveNumbers && moveNumbers && moveNumbers[n] != null) {
-        const numStr = String(moveNumbers[n]);
+      if (sn && mns && mns[n] != null) {
+        const numStr = String(mns[n]);
         ctx.fillStyle = isBlack ? '#fff' : '#222';
         ctx.font = `bold ${Math.max(10, stoneRadius * 0.55)}px sans-serif`;
         ctx.textAlign = 'center';
@@ -171,8 +189,8 @@ export function BoardCanvas({
 
     // 预览
     const previewId = previewRef.current;
-    if (previewId != null && gameState[previewId]?.s === 0) {
-      const p = positions[previewId];
+    if (previewId != null && gs[previewId]?.s === 0) {
+      const p = pos[previewId];
       ctx.fillStyle = 'rgba(76, 175, 80, 0.4)';
       ctx.beginPath();
       ctx.arc(p.x * scale, p.y * scale, stoneRadius + 2, 0, Math.PI * 2);
@@ -187,9 +205,9 @@ export function BoardCanvas({
     }
 
     ctx.restore();
-  }, [adj, positions, gameState, moveNumbers, lastMove, showMoveNumbers]);
+  };
 
-  const redraw = useCallback(() => drawScene(), [drawScene]);
+  const redraw = () => drawScene();
 
   // H5 canvas 初始化
   useEffect(() => {
@@ -201,13 +219,19 @@ export function BoardCanvas({
     canvas.width = canvasWidth * dpr;
     canvas.height = canvasHeight * dpr;
     scaleRef.current = Math.min(canvasWidth, canvasHeight) / BOARD_COORDS_SIZE;
-    drawScene();
   }, [canvasWidth, canvasHeight]);
 
-  // 游戏状态变化时重绘
+  // 绘制：每次相关状态变化时重绘
+  const drawVersion = useRef(0);
   useEffect(() => {
     if (isWeapp) return;
-    drawScene();
+    drawVersion.current++;
+    const myVersion = drawVersion.current;
+    requestAnimationFrame(() => {
+      if (drawVersion.current === myVersion) {
+        drawScene();
+      }
+    });
   }, [gameState, adj, positions, moveNumbers, lastMove, showMoveNumbers]);
 
   /* ---- 交互（H5 only） ---- */
@@ -258,46 +282,72 @@ export function BoardCanvas({
     }
   }, [gameState, onPlay, redraw]);
 
-  const onTouchStart = useCallback((e: any) => {
-    e.preventDefault?.();
-    pressingRef.current = true;
-    const t = e.touches?.[0];
-    if (t) handlePreview(t.clientX, t.clientY);
-  }, [handlePreview]);
+  /* ---- 原生事件绑定（绕过 Taro 合成事件） ---- */
+  useEffect(() => {
+    if (isWeapp) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-  const onTouchMove = useCallback((e: any) => {
-    e.preventDefault?.();
-    if (!pressingRef.current) return;
-    const t = e.touches?.[0];
-    if (t) handlePreview(t.clientX, t.clientY);
-  }, [handlePreview]);
+    const onMouseDown = (e: MouseEvent) => {
+      pressingRef.current = true;
+      handlePreview(e.clientX, e.clientY);
+    };
 
-  const onTouchEnd = useCallback((e: any) => {
-    e.preventDefault?.();
-    if (pressingRef.current) tryPlay();
-  }, [tryPlay]);
+    const onMouseMove = (e: MouseEvent) => {
+      if (!pressingRef.current) return;
+      handlePreview(e.clientX, e.clientY);
+    };
 
-  const onMouseDown = useCallback((e: any) => {
-    pressingRef.current = true;
-    handlePreview(e.clientX, e.clientY);
-  }, [handlePreview]);
+    const onMouseUp = (e: MouseEvent) => {
+      if (!pressingRef.current) return;
+      tryPlay();
+    };
 
-  const onMouseMove = useCallback((e: any) => {
-    if (!pressingRef.current) return;
-    handlePreview(e.clientX, e.clientY);
-  }, [handlePreview]);
+    const onMouseLeave = () => {
+      if (pressingRef.current) {
+        pressingRef.current = false;
+        previewRef.current = null;
+        redraw();
+      }
+    };
 
-  const onMouseUp = useCallback(() => {
-    if (pressingRef.current) tryPlay();
-  }, [tryPlay]);
+    const onTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      pressingRef.current = true;
+      const t = e.touches[0];
+      if (t) handlePreview(t.clientX, t.clientY);
+    };
 
-  const onMouseLeave = useCallback(() => {
-    if (pressingRef.current) {
-      pressingRef.current = false;
-      previewRef.current = null;
-      redraw();
-    }
-  }, [redraw]);
+    const onTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (!pressingRef.current) return;
+      const t = e.touches[0];
+      if (t) handlePreview(t.clientX, t.clientY);
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      e.preventDefault();
+      if (pressingRef.current) tryPlay();
+    };
+
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mouseleave', onMouseLeave);
+    canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+    canvas.addEventListener('touchend', onTouchEnd, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('mousemove', onMouseMove);
+      canvas.removeEventListener('mouseup', onMouseUp);
+      canvas.removeEventListener('mouseleave', onMouseLeave);
+      canvas.removeEventListener('touchstart', onTouchStart);
+      canvas.removeEventListener('touchmove', onTouchMove);
+      canvas.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [handlePreview, tryPlay, redraw]);
 
   /* ---- 小程序模式：Taro Canvas ---- */
   const weappCtxRef = useRef<any>(null);
@@ -359,13 +409,6 @@ export function BoardCanvas({
           touchAction: 'none',
           display: 'block',
         }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseLeave}
       />
     </View>
   );
