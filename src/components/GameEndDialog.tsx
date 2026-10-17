@@ -1,146 +1,72 @@
-import { View, Text } from '@tarojs/components';
+import { View } from '@tarojs/components';
+import { Text } from './Text';
 
 interface GameEndDialogProps {
   ended: boolean;
-  isNextBlack: boolean;
   blackScore: number;
   whiteScore: number;
   onRestart: () => void;
   onContinue: () => void;
 }
 
-/**
- * 终局对话框
- * 显示最终得分和胜负
- */
-export function GameEndDialog({
-  ended,
-  blackScore,
-  whiteScore,
-  onRestart,
-  onContinue,
-}: GameEndDialogProps) {
+export function GameEndDialog({ ended, blackScore, whiteScore, onRestart, onContinue }: GameEndDialogProps) {
   if (!ended) return null;
 
   const diff = blackScore - whiteScore;
   const winner = diff > 0 ? '黑棋' : diff < 0 ? '白棋' : '和棋';
-  const winnerColor = diff > 0 ? '#1a1a1a' : diff < 0 ? '#666' : '#888';
 
   return (
     <View style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 100,
+      position: 'fixed', inset: 0,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      display: 'flex', justifyContent: 'center', alignItems: 'center',
+      zIndex: 200,
     }}>
       <View style={{
-        backgroundColor: '#fff',
-        borderRadius: '16px',
-        padding: '24px',
-        minWidth: '280px',
-        maxWidth: '90vw',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+        backgroundColor: '#16213e',
+        borderRadius: 20,
+        padding: 28,
+        minWidth: 280,
+        maxWidth: '85vw',
         textAlign: 'center',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
       }}>
-        {/* 标题 */}
-        <View style={{
-          fontSize: '20px',
-          fontWeight: 'bold',
-          color: '#333',
-          marginBottom: '16px',
-        }}>
+        <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#e0e0e0', marginBottom: 16 }}>
           对局结束
-        </View>
+        </Text>
 
-        {/* 比分 */}
-        <View style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '24px',
-          marginBottom: '16px',
-        }}>
+        <View style={{ display: 'flex', justifyContent: 'center', gap: 28, marginBottom: 16 }}>
           <View style={{ textAlign: 'center' }}>
-            <View style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              backgroundColor: '#1a1a1a',
-              margin: '0 auto 6px',
-            }} />
-            <View style={{ fontSize: '14px', color: '#666' }}>黑棋</View>
-            <View style={{ fontSize: '24px', fontWeight: 'bold', color: '#1a1a1a' }}>
-              {blackScore}
-            </View>
+            <View style={{ width: 36, height: 36, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, #555, #111)', margin: '0 auto 6px', border: '2px solid #444' }} />
+            <Text style={{ fontSize: 13, color: '#888' }}>黑棋</Text>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#e0e0e0' }}>{blackScore}</Text>
           </View>
-          <View style={{
-            fontSize: '28px',
-            fontWeight: 'bold',
-            color: '#ccc',
-            alignSelf: 'center',
-          }}>
-            :
-          </View>
+          <Text style={{ fontSize: 24, color: '#555', alignSelf: 'center' }}>:</Text>
           <View style={{ textAlign: 'center' }}>
-            <View style={{
-              width: 32,
-              height: 32,
-              borderRadius: '50%',
-              backgroundColor: '#f0f0f0',
-              border: '2px solid #aaa',
-              margin: '0 auto 6px',
-            }} />
-            <View style={{ fontSize: '14px', color: '#666' }}>白棋</View>
-            <View style={{ fontSize: '24px', fontWeight: 'bold', color: '#333' }}>
-              {whiteScore}
-            </View>
+            <View style={{ width: 36, height: 36, borderRadius: '50%', background: 'radial-gradient(circle at 35% 35%, #fff, #ccc)', margin: '0 auto 6px', border: '2px solid #aaa' }} />
+            <Text style={{ fontSize: 13, color: '#888' }}>白棋</Text>
+            <Text style={{ fontSize: 28, fontWeight: 'bold', color: '#e0e0e0' }}>{whiteScore}</Text>
           </View>
         </View>
 
-        {/* 胜负 */}
-        <View style={{
-          fontSize: '18px',
-          fontWeight: 'bold',
-          color: winnerColor,
-          marginBottom: '20px',
-        }}>
+        <Text style={{ fontSize: 18, fontWeight: '600', color: '#e94560', marginBottom: 20 }}>
           {winner === '和棋' ? '和棋' : `${winner} 胜 ${Math.abs(diff)} 目`}
-        </View>
+        </Text>
 
-        {/* 按钮 */}
-        <View style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-          <View
-            onClick={onRestart}
-            style={{
-              padding: '10px 24px',
-              borderRadius: '10px',
-              fontSize: '15px',
-              fontWeight: '500',
-              backgroundColor: '#4CAF50',
-              color: '#fff',
-              cursor: 'pointer',
-            }}
-          >
-            再来一局
+        <View style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <View onClick={onRestart} style={{
+            padding: '12px 24px', borderRadius: 12,
+            backgroundColor: '#e94560', color: '#fff',
+            cursor: 'pointer', fontSize: 15, fontWeight: 500,
+          }}>
+            <Text>再来一局</Text>
           </View>
-          <View
-            onClick={onContinue}
-            style={{
-              padding: '10px 24px',
-              borderRadius: '10px',
-              fontSize: '15px',
-              fontWeight: '500',
-              backgroundColor: '#eee',
-              color: '#555',
-              cursor: 'pointer',
-            }}
-          >
-            查看棋盘
+          <View onClick={onContinue} style={{
+            padding: '12px 24px', borderRadius: 12,
+            backgroundColor: '#0f3460', color: '#ccc',
+            cursor: 'pointer', fontSize: 15,
+          }}>
+            <Text>查看棋盘</Text>
           </View>
         </View>
       </View>

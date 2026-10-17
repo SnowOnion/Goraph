@@ -1,5 +1,4 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { View } from '@tarojs/components';
 import { AdjacencyList, PositionsMap, GameState } from '@/core/types';
 
 interface BoardCanvasProps {
@@ -209,8 +208,15 @@ export function BoardCanvas(props: BoardCanvasProps) {
   useEffect(() => { paint(); }, [gameState, adj, positions, moveNumbers, lastMove, showMoveNumbers]);
 
   return (
-    <View style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, touchAction: 'none', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-      <canvas style={{ width: `${canvasWidth}px`, height: `${canvasHeight}px`, touchAction: 'none', display: 'block' }} />
-    </View>
+    <canvas
+      style={{
+        width: `${canvasWidth}px`,
+        height: `${canvasHeight}px`,
+        touchAction: 'none',
+        display: 'block',
+        borderRadius: '8px',
+        background: '#e8d5b0',
+      }}
+    />
   );
 }

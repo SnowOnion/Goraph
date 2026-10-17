@@ -1,107 +1,59 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { View } from '@tarojs/components';
 import { Text } from '@/components/Text';
-import Taro, { useReady } from '@tarojs/taro';
-import { BoardCanvas } from '@/components/BoardCanvas';
-import { GameControls } from '@/components/GameControls';
+import { BOARDS } from '@/core/boards';
 import { GameEndDialog } from '@/components/GameEndDialog';
+import { BoardCanvas } from '@/components/BoardCanvas';
 import { useGame } from '@/hooks/useGame';
 import { calculateScore } from '@/core/game-engine';
+import Taro, { useReady, useDidShow } from '@tarojs/taro';
+import './index.scss';
 
 export default function Index() {
   const [canvasSize, setCanvasSize] = useState({ width: 350, height: 350 });
-
-  // 响应式计算 canvas 函数
-  const calcCanvasSize = useCallback(() => {
-    const sysInfo = Taro.getSystemInfoSync();
-    const pad = 40;
-    const maxSize = Math.min(
-      sysInfo.windowWidth - pad,
-      sysInfo.windowHeight * 0.5,
-      500,
-    );
-    setCanvasSize({ width: Math.floor(maxSize), height: Math.floor(maxSize) });
-  }, []);
-
-  useReady(() => {
-    calcCanvasSize();
-  });
-
-  // 屏幕旋转/尺寸变化时重算
-  useEffect(() => {
-    const handler = () => calcCanvasSize();
-    window.addEventListener('resize', handler);
-    return () => window.removeEventListener('resize', handler);
-  }, [calcCanvasSize]);
-
-  const {
-    gameState,
-    meta,
-    adj,
-    positions,
-    boardIndex,
-    boardName,
-    allBoards,
-    info,
-    isRectangular,
-    hasFiveRule,
-    moveNumbers,
-    lastMove,
-    canUndo,
-    moveCount,
-    noRepeat,
-    aiEnabled,
-    aiThinking,
-    selectBoard,
-    handlePlay,
-    pass,
-    restart,
-    toggleFiveRule,
-    toggleNoRepeat,
-    toggleAI,
-    refreshBoards,
-    undo,
-  } = useGame();
-
-  const currentBoard = allBoards[boardIndex];
+  const [showSettings, setShowSettings] = useState(false);
   const [showNumbers, setShowNumbers] = useState(true);
 
+  const calcCanvasSize = () => {
+    const sysInfo = Taro.getSystemInfoSync();
+    const maxSize = Math.min(sysInfo.windowWidth - 32, sysInfo.windowHeight * 0.48, 480);
+    setCanvasSize({ width: Math.floor(maxSize), height: Math.floor(maxSize) });
+  };
+
+  useReady(() => calcCanvasSize());
+  useDidShow(() => calcCanvasSize());
+
+  const {
+    gameState, meta, adj, positions, boardIndex, allBoards, info,
+    isRectangular, hasFiveRule, moveNumbers, lastMove, moveCount,
+    noRepeat, aiEnabled, aiThinking, capturedBlack, capturedWhite,
+    canUndo,
+    selectBoard, handlePlay, pass, restart, toggleFiveRule,
+    toggleNoRepeat, toggleAI, undo,
+  } = useGame();
+
   return (
-    <View style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      padding: 'max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom))',
-      minHeight: '100vh',
-      minHeight: '100dvh',
-      boxSizing: 'border-box',
-      backgroundColor: '#f5f0e8',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif',
-      // 禁止 iOS 弹性滚动
-      overscrollBehavior: 'none',
-      WebkitOverflowScrolling: 'touch',
-    }}>
-      {/* 标题 */}
-      <View style={{
-        fontSize: '22px',
-        fontWeight: '700',
-        color: '#2c2c2c',
-        marginBottom: '6px',
-        letterSpacing: '2px',
-      }}>
-        图上的围棋
+    <View className="game-page">
+      {/* 顶栏 */}
+      <View className="game-header">
+        <View className="turn-indicator">
+          <View className={`stone-icon ${meta.next === 1 ? 'black' : 'white'}`} />
+          <Text className="turn-text">{meta.next === 1 ? '黑棋' : '白棋'}落子</Text>
+        </View>
+        <View className="capture-info">
+          <View className="capture-item">
+            <View className="stone-dot black" />
+            <Text>{capturedBlack}</Text>
+          </View>
+          <View className="capture-item">
+            <View className="stone-dot white" />
+            <Text>{capturedWhite}</Text>
+          </View>
+        </View>
       </View>
 
       {/* 棋盘 */}
-      <View
-        style={{
-          backgroundColor: '#fff',
-          borderRadius: '12px',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
-          marginBottom: '16px',
-          position: 'relative',
-        }}
-      >
+      <View className="board-container">
         <BoardCanvas
           adj={adj}
           positions={positions}
@@ -115,78 +67,106 @@ export default function Index() {
         />
       </View>
 
-      {/* 控制面板 */}
-      <GameControls
-        boardIndex={boardIndex}
-        allBoards={allBoards}
-        isNextBlack={meta.next === 1}
-        isRectangular={isRectangular}
-        hasFiveRule={hasFiveRule}
-        ended={meta.ended}
-        canUndo={canUndo}
-        moveCount={moveCount}
-        showNumbers={showNumbers}
-        noRepeat={noRepeat}
-        aiEnabled={aiEnabled}
-        aiThinking={aiThinking}
-        capturedBlack={meta.capturedByBlack}
-        capturedWhite={meta.capturedByWhite}
-        info={info}
-        onSelectBoard={selectBoard}
-        onRestart={restart}
-        onPass={pass}
-        onToggleFiveRule={toggleFiveRule}
-        onToggleShowNumbers={() => setShowNumbers((p) => !p)}
-        onToggleNoRepeat={toggleNoRepeat}
-        onToggleAI={toggleAI}
-        onUndo={undo}
-      />
+      {/* 操作栏 */}
+      <View className="action-bar">
+        <View className={`action-btn ${(!canUndo || meta.ended) ? 'disabled' : ''}`} onClick={(!canUndo || meta.ended) ? undefined : undo}>
+          <Text className="action-icon">↩</Text>
+          <Text className="action-label">悔棋</Text>
+        </View>
+        <View className={`action-btn primary ${meta.ended ? 'disabled' : ''}`} onClick={meta.ended ? undefined : pass}>
+          <Text className="action-icon">⏭</Text>
+          <Text className="action-label">PASS</Text>
+        </View>
+        <View className="action-btn" onClick={restart}>
+          <Text className="action-icon">🔄</Text>
+          <Text className="action-label">重来</Text>
+        </View>
+        <View className="action-btn" onClick={() => setShowSettings(s => !s)}>
+          <Text className="action-icon">⚙️</Text>
+          <Text className="action-label">设置</Text>
+        </View>
+      </View>
+
+      {/* 信息提示 */}
+      {info && info.length > 1 && (
+        <View className={`info-bar ${info.includes('不合') || info.includes('禁止') ? 'error' : ''}`}>
+          <Text>{info}</Text>
+        </View>
+      )}
+
+      {/* 设置面板 */}
+      {showSettings && (
+        <View className="settings-overlay" onClick={() => setShowSettings(false)}>
+          <View className="settings-panel" onClick={(e) => e.stopPropagation()}>
+            <View className="settings-header">
+              <Text className="settings-title">设置</Text>
+              <View className="settings-close" onClick={() => setShowSettings(false)}>
+                <Text>✕</Text>
+              </View>
+            </View>
+
+            <View className="setting-section">
+              <Text className="setting-label">棋盘</Text>
+              <View className="board-selector">
+                {allBoards.map((b, i) => (
+                  <View
+                    key={i}
+                    className={`board-chip ${boardIndex === i ? 'active' : ''}`}
+                    onClick={() => selectBoard(i)}
+                  >
+                    <Text>{b.name}{i >= BOARDS.length ? ' ✏️' : ''}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View className="setting-section">
+              <View className="toggle-row">
+                <Text>手数序号</Text>
+                <View className={`toggle ${showNumbers ? 'on' : ''}`} onClick={() => setShowNumbers(p => !p)}>
+                  <View className="toggle-knob" />
+                </View>
+              </View>
+              <View className="toggle-row">
+                <Text>AI 对手</Text>
+                <View className={`toggle ${aiEnabled ? 'on' : ''}`} onClick={toggleAI}>
+                  <View className="toggle-knob" />
+                </View>
+              </View>
+              <View className="toggle-row">
+                <Text>禁止全同再现</Text>
+                <View className={`toggle ${noRepeat ? 'on' : ''}`} onClick={toggleNoRepeat}>
+                  <View className="toggle-knob" />
+                </View>
+              </View>
+              {isRectangular && (
+                <View className="toggle-row">
+                  <Text>五子棋规则</Text>
+                  <View className={`toggle ${hasFiveRule ? 'on' : ''}`} onClick={toggleFiveRule}>
+                    <View className="toggle-knob" />
+                  </View>
+                </View>
+              )}
+            </View>
+
+            <View
+              className="editor-entry"
+              onClick={() => Taro.navigateTo({ url: '/pages/editor/index' })}
+            >
+              <Text>✏️ 棋盘编辑器</Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* 终局弹窗 */}
       <GameEndDialog
         ended={meta.ended}
-        isNextBlack={meta.next === 1}
         blackScore={calculateScore(gameState, adj, meta).black}
         whiteScore={calculateScore(gameState, adj, meta).white}
         onRestart={restart}
         onContinue={() => {}}
       />
-
-      {/* 编辑器入口 */}
-      <View
-        onClick={() => Taro.navigateTo({ url: '/pages/editor/index' })}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          padding: '10px 20px',
-          borderRadius: '10px',
-          fontSize: '14px',
-          backgroundColor: '#fff',
-          color: '#2196F3',
-          border: '2px solid #2196F3',
-          cursor: 'pointer',
-          marginTop: '12px',
-          boxShadow: '0 2px 6px rgba(33,150,243,0.15)',
-        }}
-      >
-        <Text>✏️</Text>
-        <Text>棋盘编辑器</Text>
-      </View>
-
-      {/* 底部 */}
-      <View style={{
-        fontSize: '12px',
-        color: '#bbb',
-        marginTop: 'auto',
-        padding: '16px 0 24px',
-        textAlign: 'center',
-      }}>
-        <View>Goraph v0.5.0 · 任意图上的围棋</View>
-        <View style={{ marginTop: '4px', color: '#4CAF50' }}>
-          github.com/SnowOnion/Goraph
-        </View>
-      </View>
     </View>
   );
 }
