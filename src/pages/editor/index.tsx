@@ -311,7 +311,7 @@ export default function EditorPage() {
 
       {/* 返回按钮 */}
       <View
-        onClick={() => Taro.navigateBack()}
+        onClick={() => Taro.redirectTo({ url: '/pages/index/index' })}
         style={{
           marginTop: '16px',
           padding: '10px 24px',
