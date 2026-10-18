@@ -5,6 +5,7 @@ import { GameEndDialog } from '@/components/GameEndDialog';
 import { BoardCanvas } from '@/components/BoardCanvas';
 import { useGame } from '@/hooks/useGame';
 import { calculateScore } from '@/core/game-engine';
+import { BOARDS } from '@/core/boards';
 import Taro, { useReady, useDidShow } from '@tarojs/taro';
 import './index.scss';
 
