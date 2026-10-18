@@ -76,11 +76,16 @@ export function GameEndDialog({ ended, blackScore, whiteScore, onRestart, onCont
         </Text>
 
         <View style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <View onClick={onRestart} style={{
-            padding: '12px 24px', borderRadius: 12,
-            backgroundColor: '#e94560', color: '#fff',
-            cursor: 'pointer', fontSize: 15, fontWeight: 500,
-          }}>
+          <View
+            onClick={onRestart}
+            onTouchEnd={(e) => { e.preventDefault(); onRestart(); }}
+            style={{
+              padding: '12px 24px', borderRadius: 12,
+              backgroundColor: '#e94560', color: '#fff',
+              cursor: 'pointer', fontSize: 15, fontWeight: 500,
+              touchAction: 'manipulation',
+            }}
+          >
             <Text>再来一局</Text>
           </View>
           <View onClick={onContinue} style={{

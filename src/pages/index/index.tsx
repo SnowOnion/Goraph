@@ -86,19 +86,35 @@ export default function Index() {
 
       {/* 操作栏 */}
       <View className="action-bar">
-        <View className={`action-btn ${(!canUndo || meta.ended) ? 'disabled' : ''}`} onClick={(!canUndo || meta.ended) ? undefined : undo}>
+        <View
+          className={`action-btn ${(!canUndo || meta.ended) ? 'disabled' : ''}`}
+          onClick={(!canUndo || meta.ended) ? undefined : undo}
+          onTouchEnd={(!canUndo || meta.ended) ? undefined : (e) => { e.preventDefault(); undo(); }}
+        >
           <Text className="action-icon">↩</Text>
           <Text className="action-label">悔棋</Text>
         </View>
-        <View className={`action-btn primary ${meta.ended ? 'disabled' : ''}`} onClick={meta.ended ? undefined : pass}>
+        <View
+          className={`action-btn primary ${meta.ended ? 'disabled' : ''}`}
+          onClick={meta.ended ? undefined : pass}
+          onTouchEnd={meta.ended ? undefined : (e) => { e.preventDefault(); pass(); }}
+        >
           <Text className="action-icon">⏭</Text>
           <Text className="action-label">PASS</Text>
         </View>
-        <View className="action-btn" onClick={triggerRestart}>
+        <View
+          className="action-btn"
+          onClick={triggerRestart}
+          onTouchEnd={(e) => { e.preventDefault(); triggerRestart(); }}
+        >
           <Text className="action-icon">🔄</Text>
           <Text className="action-label">重来</Text>
         </View>
-        <View className="action-btn" onClick={() => setShowSettings(s => !s)}>
+        <View
+          className="action-btn"
+          onClick={() => setShowSettings(s => !s)}
+          onTouchEnd={(e) => { e.preventDefault(); setShowSettings(s => !s); }}
+        >
           <Text className="action-icon">⚙️</Text>
           <Text className="action-label">设置</Text>
         </View>
