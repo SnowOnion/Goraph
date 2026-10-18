@@ -93,11 +93,11 @@ async function main() {
   const hasTitle = await evaluate(ws, "document.title === '图上的围棋'");
   test('页面标题正确', hasTitle);
 
-  const nextPlayer = await evaluate(ws, `Array.from(document.querySelectorAll('span')).map(s => s.textContent).filter(t => t.includes('落子'))[0] || 'not found'`);
-  test('回合指示显示', nextPlayer.includes('落子'), nextPlayer);
+  const nextPlayer = await evaluate(ws, `Array.from(document.querySelectorAll('span')).map(s => s.textContent).filter(t => t.includes('黑') || t.includes('白'))[0] || 'not found'`);
+  test('回合指示显示', nextPlayer.includes('黑') || nextPlayer.includes('白'), nextPlayer);
 
   const buttons = await evaluate(ws, `Array.from(document.querySelectorAll('.action-btn')).map(b => b.textContent.trim().substring(0, 10))`);
-  test('操作栏按钮可见', buttons.length >= 4, JSON.stringify(buttons));
+  test('操作栏按钮可见', buttons.length >= 4 && buttons.some(b => b.includes('虚手')), JSON.stringify(buttons));
 
   // === 2. 落子交互 ===
   console.log('\n--- 落子交互 ---');
@@ -120,13 +120,28 @@ async function main() {
     return 'switched';
   })()`);
   await sleep(400);
-  await click(ws, '.action-btn:last-child'); // 关闭设置
-  await sleep(200);
+  // 关闭设置面板（点击遮罩或按钮）
+  await evaluate(ws, `(() => {
+    const overlay = document.querySelector('.settings-overlay');
+    if (overlay) overlay.click();
+    return 'closed';
+  })()`);
+  await sleep(400);
+
+  // 点击重来确保游戏重置
+  await evaluate(ws, `(() => {
+    const btns = document.querySelectorAll('.action-btn');
+    for (const b of btns) {
+      if (b.textContent.includes('重来')) { b.click(); return 'restarted'; }
+    }
+    return 'not found';
+  })()`);
+  await sleep(400);
 
   await click(ws, '.action-btn.primary');
   await sleep(300);
-  const afterPass1 = await evaluate(ws, `Array.from(document.querySelectorAll('span')).map(s => s.textContent).filter(t => t.includes('落子') || t.includes('放弃')).join(', ')`);
-  test('第一次虚手', afterPass1.includes('黑棋落子') || afterPass1.includes('放弃'), afterPass1);
+  const afterPass1 = await evaluate(ws, `Array.from(document.querySelectorAll('span')).map(s => s.textContent).filter(t => t.includes('黑') || t.includes('白') || t.includes('放弃')).join(', ')`);
+  test('第一次虚手', afterPass1.includes('白') || afterPass1.includes('放弃'), afterPass1);
 
   await click(ws, '.action-btn.primary');
   await sleep(300);
@@ -149,23 +164,29 @@ async function main() {
   })()`);
 
   await sleep(500);
-  const afterRestart = await evaluate(ws, `Array.from(document.querySelectorAll('span')).map(s => s.textContent).filter(t => t.includes('落子'))[0] || 'not found'`);
-  test('重启后状态重置', afterRestart === '黑棋落子', afterRestart);
+  const afterRestart = await evaluate(ws, `Array.from(document.querySelectorAll('span')).map(s => s.textContent).filter(t => t.includes('黑') || t.includes('白'))[0] || 'not found'`);
+  test('重启后状态重置', afterRestart.includes('黑'), afterRestart);
 
   const passBtnEnabled = await evaluate(ws, `(() => {
     const btns = document.querySelectorAll('.action-btn');
     for (const b of btns) {
-      if (b.textContent.includes('PASS')) return !b.classList.contains('disabled');
+      if (b.textContent.includes('虚手')) return !b.classList.contains('disabled');
     }
     return false;
   })()`);
-  test('重启后 PASS 可用', passBtnEnabled);
+  test('重启后虚手可用', passBtnEnabled);
 
   // === 5. 棋盘切换 ===
   console.log('\n--- 棋盘切换 ---');
 
   // 打开设置面板
-  await click(ws, '.action-btn:last-child');
+  await evaluate(ws, `(() => {
+    const btns = document.querySelectorAll('.action-btn');
+    for (const b of btns) {
+      if (b.textContent.includes('设置')) { b.click(); return 'opened'; }
+    }
+    return 'not found';
+  })()`);
   await sleep(500);
   // 切换到 2×2
   await evaluate(ws, `(() => {
@@ -176,6 +197,13 @@ async function main() {
     return 'not found';
   })()`);
   await sleep(500);
+  // 关闭设置
+  await evaluate(ws, `(() => {
+    const overlay = document.querySelector('.settings-overlay');
+    if (overlay) overlay.click();
+    return 'closed';
+  })()`);
+  await sleep(300);
   const boardSwitched = await evaluate(ws, `document.body.innerText.includes('2×2')`);
   test('棋盘切换', boardSwitched);
 
