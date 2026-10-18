@@ -53,7 +53,7 @@ export function GameEndDialog({ ended, blackScore, whiteScore, onRestart, onCont
           <Text style={{ fontSize: 14, color: '#888' }}>✕</Text>
         </View>
 
-        <Text style={{ fontSize: 22, fontWeight: 'bold', color: '#e0e0e0', marginBottom: 16 }}>
+        <Text style={{ fontSize: 26, fontWeight: 'bold', color: '#e0e0e0', marginBottom: 18 }}>
           对局结束
         </Text>
 

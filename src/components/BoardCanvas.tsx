@@ -185,15 +185,19 @@ export function BoardCanvas(props: BoardCanvasProps) {
     paint();
 
     const onMd = (e: MouseEvent) => { pressing.current = true; doPreview(e.clientX, e.clientY); };
+    const onMm = (e: MouseEvent) => { if (pressing.current) doPreview(e.clientX, e.clientY); };
     const onMu = () => { if (pressing.current) doPlay(); };
     const onMl = () => { pressing.current = false; preview.current = null; paint(); };
     const onTs = (e: TouchEvent) => { e.preventDefault(); pressing.current = true; const t = e.touches[0]; if (t) doPreview(t.clientX, t.clientY); };
+    const onTm = (e: TouchEvent) => { e.preventDefault(); if (pressing.current) { const t = e.touches[0]; if (t) doPreview(t.clientX, t.clientY); } };
     const onTe = (e: TouchEvent) => { e.preventDefault(); if (pressing.current) doPlay(); };
 
     node.addEventListener('mousedown', onMd);
+    node.addEventListener('mousemove', onMm);
     node.addEventListener('mouseup', onMu);
     node.addEventListener('mouseleave', onMl);
     node.addEventListener('touchstart', onTs, { passive: false });
+    node.addEventListener('touchmove', onTm, { passive: false });
     node.addEventListener('touchend', onTe, { passive: false });
   }, [canvasWidth, canvasHeight, doPreview, doPlay]);
 

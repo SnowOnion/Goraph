@@ -10,6 +10,7 @@
   overflow-x: hidden;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  font-size: 18px; // 基础字号
 }
 
 /* ---- 顶栏 ---- */
@@ -17,8 +18,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  padding-top: max(12px, env(safe-area-inset-top));
+  padding: 16px 20px;
+  padding-top: max(16px, env(safe-area-inset-top));
   background: #16213e;
   border-bottom: 1px solid #0f3460;
 }
@@ -26,12 +27,12 @@
 .turn-indicator {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .stone-icon {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 2px solid #555;
 
@@ -47,27 +48,27 @@
 }
 
 .turn-text {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   color: #e0e0e0;
 }
 
 .capture-info {
   display: flex;
-  gap: 16px;
+  gap: 18px;
 }
 
 .capture-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 17px;
   color: #aaa;
 }
 
 .stone-dot {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
 
   &.black {
@@ -94,9 +95,9 @@
 .action-bar {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  padding: 12px 16px;
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  gap: 10px;
+  padding: 14px 16px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
   background: #16213e;
   border-top: 1px solid #0f3460;
 }
@@ -106,14 +107,14 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 10px 18px;
-  border-radius: 12px;
+  padding: 12px 20px;
+  border-radius: 14px;
   background: #0f3460;
   cursor: pointer;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  min-width: 64px;
+  min-width: 76px;
 
   &:active {
     transform: scale(0.95);
@@ -135,12 +136,12 @@
 }
 
 .action-icon {
-  font-size: 20px;
+  font-size: 26px;
   line-height: 1;
 }
 
 .action-label {
-  font-size: 11px;
+  font-size: 14px;
   color: #ccc;
   font-weight: 500;
 }
@@ -148,8 +149,8 @@
 /* ---- 信息提示 ---- */
 .info-bar {
   text-align: center;
-  padding: 6px 16px;
-  font-size: 13px;
+  padding: 8px 16px;
+  font-size: 16px;
   color: #888;
   background: #16213e;
 
@@ -167,16 +168,18 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  pointer-events: none;
 }
 
 .settings-panel {
   width: 100%;
   max-width: 500px;
   background: #16213e;
-  border-radius: 20px 20px 0 0;
-  padding: 20px;
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  padding: 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
   animation: slideUp 0.25s ease-out;
+  pointer-events: auto;
 }
 
 @keyframes slideUp {
@@ -188,35 +191,35 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .settings-title {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 700;
   color: #e0e0e0;
 }
 
 .settings-close {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background: #0f3460;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
 }
 
 .setting-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .setting-label {
-  font-size: 13px;
+  font-size: 15px;
   color: #888;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -224,14 +227,14 @@
 .board-selector {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .board-chip {
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding: 10px 18px;
+  border-radius: 24px;
   background: #0f3460;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
@@ -250,15 +253,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  font-size: 15px;
+  padding: 12px 0;
+  font-size: 17px;
   color: #ccc;
 }
 
 .toggle {
-  width: 48px;
-  height: 26px;
-  border-radius: 13px;
+  width: 52px;
+  height: 28px;
+  border-radius: 14px;
   background: #333;
   position: relative;
   cursor: pointer;
@@ -270,29 +273,29 @@
 }
 
 .toggle-knob {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: #fff;
   position: absolute;
   top: 2px;
   left: 2px;
   transition: left 0.2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .toggle.on .toggle-knob {
-  left: 24px;
+  left: 26px;
 }
 
 .editor-entry {
-  padding: 14px;
-  border-radius: 12px;
+  padding: 16px;
+  border-radius: 14px;
   background: #0f3460;
   text-align: center;
-  font-size: 15px;
+  font-size: 17px;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 12px;
 
   &:active {
     transform: scale(0.98);
