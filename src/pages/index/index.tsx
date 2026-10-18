@@ -10,7 +10,6 @@ import Taro, { useReady, useDidShow } from '@tarojs/taro';
 import './index.scss';
 
 export default function Index() {
-  console.log('[INDEX] component function called');
   const [canvasSize, setCanvasSize] = useState({ width: 350, height: 350 });
   const [showSettings, setShowSettings] = useState(false);
   const [showNumbers, setShowNumbers] = useState(true);
@@ -18,14 +17,13 @@ export default function Index() {
 
   const calcCanvasSize = useCallback(() => {
     const sysInfo = Taro.getSystemInfoSync();
-    const maxSize = Math.min(sysInfo.windowWidth - 32, sysInfo.windowHeight * 0.48, 480);
+    const maxSize = Math.min(sysInfo.windowWidth - 24, sysInfo.windowHeight * 0.46, 460);
     setCanvasSize({ width: Math.floor(maxSize), height: Math.floor(maxSize) });
   }, []);
 
   useReady(() => calcCanvasSize());
   useDidShow(() => calcCanvasSize());
 
-  // 屏幕旋转/尺寸变化
   useEffect(() => {
     const handler = () => calcCanvasSize();
     window.addEventListener('resize', handler);
@@ -41,9 +39,7 @@ export default function Index() {
     toggleNoRepeat, toggleAI, undo,
   } = useGame();
 
-  // 用于通知 BoardCanvas 游戏已重启（必须在 useGame 之后定义）
   const triggerRestart = useCallback(() => {
-    console.log('[RESTART] triggerRestart called');
     setGameId(id => id + 1);
     restart();
   }, [restart]);
@@ -54,8 +50,7 @@ export default function Index() {
       <View className="game-header">
         <View className="turn-indicator">
           <View className={`stone-icon ${meta.next === 1 ? 'black' : 'white'}`} />
-          <Text className="turn-text">{meta.next === 1 ? '黑棋' : '白棋'}落子</Text>
-
+          <Text className="turn-text">{meta.next === 1 ? '黑' : '白'}</Text>
         </View>
         <View className="capture-info">
           <View className="capture-item">
@@ -101,7 +96,7 @@ export default function Index() {
           onTouchEnd={meta.ended ? undefined : (e) => { e.preventDefault(); pass(); }}
         >
           <Text className="action-icon">⏭</Text>
-          <Text className="action-label">PASS</Text>
+          <Text className="action-label">虚手</Text>
         </View>
         <View
           className="action-btn"
@@ -131,7 +126,7 @@ export default function Index() {
       {/* 设置面板 */}
       {showSettings && (
         <View className="settings-overlay" onClick={() => setShowSettings(false)}>
-          <View className="settings-panel" onClick={(e) => e.stopPropagation()}>
+          <View className="settings-panel" onClick={(e: any) => e.stopPropagation()}>
             <View className="settings-header">
               <Text className="settings-title">设置</Text>
               <View className="settings-close" onClick={() => setShowSettings(false)}>

@@ -4,13 +4,12 @@
   align-items: stretch;
   min-height: 100vh;
   min-height: 100dvh;
-  background: #1a1a2e;
+  background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
   color: #e0e0e0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  font-size: 18px; // 基础字号
 }
 
 /* ---- 顶栏 ---- */
@@ -20,8 +19,9 @@
   justify-content: space-between;
   padding: 16px 20px;
   padding-top: max(16px, env(safe-area-inset-top));
-  background: #16213e;
-  border-bottom: 1px solid #0f3460;
+  background: rgba(22, 33, 62, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 .turn-indicator {
@@ -31,39 +31,42 @@
 }
 
 .stone-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid #555;
+  width: 36px;
+  height: 36px;
+  borderRadius: 50%;
+  border: 2px solid rgba(255,255,255,0.3);
+  flex-shrink: 0;
 
   &.black {
-    background: radial-gradient(circle at 35% 35%, #555, #111);
-    border-color: #333;
+    background: radial-gradient(circle at 35% 35%, #666, #111);
+    border-color: #444;
   }
 
   &.white {
     background: radial-gradient(circle at 35% 35%, #fff, #ccc);
-    border-color: #aaa;
+    border-color: #bbb;
   }
 }
 
 .turn-text {
   font-size: 22px;
   font-weight: 700;
-  color: #e0e0e0;
+  color: #fff;
+  letter-spacing: 0.5px;
 }
 
 .capture-info {
   display: flex;
-  gap: 18px;
+  gap: 20px;
 }
 
 .capture-item {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 17px;
+  font-size: 18px;
   color: #aaa;
+  font-weight: 500;
 }
 
 .stone-dot {
@@ -73,12 +76,12 @@
 
   &.black {
     background: #111;
-    border: 1px solid #444;
+    border: 1.5px solid #555;
   }
 
   &.white {
     background: #eee;
-    border: 1px solid #aaa;
+    border: 1.5px solid #aaa;
   }
 }
 
@@ -86,7 +89,8 @@
 .board-container {
   display: flex;
   justify-content: center;
-  padding: 16px;
+  align-items: center;
+  padding: 12px 16px;
   flex: 1;
   min-height: 0;
 }
@@ -95,64 +99,70 @@
 .action-bar {
   display: flex;
   justify-content: center;
+  align-items: stretch;
   gap: 10px;
-  padding: 14px 16px;
-  padding-bottom: max(14px, env(safe-area-inset-bottom));
-  background: #16213e;
-  border-top: 1px solid #0f3460;
+  padding: 12px 16px 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  background: rgba(22, 33, 62, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255,255,255,0.08);
 }
 
 .action-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  padding: 12px 20px;
-  border-radius: 14px;
-  background: #0f3460;
+  padding: 14px 22px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.08);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: transform 0.1s, background 0.15s;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  min-width: 76px;
+  min-width: 80px;
+  min-height: 64px;
 
   &:active {
-    transform: scale(0.95);
-    background: #1a4a7a;
+    transform: scale(0.94);
+    background: rgba(255,255,255,0.15);
   }
 
   &.primary {
-    background: #e94560;
+    background: linear-gradient(135deg, #e94560 0%, #c0392b 100%);
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
 
     &:active {
-      background: #c0392b;
+      background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
     }
   }
 
   &.disabled {
-    opacity: 0.4;
+    opacity: 0.35;
     pointer-events: none;
   }
 }
 
 .action-icon {
-  font-size: 26px;
+  font-size: 28px;
   line-height: 1;
 }
 
 .action-label {
   font-size: 14px;
-  color: #ccc;
-  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 /* ---- 信息提示 ---- */
 .info-bar {
   text-align: center;
   padding: 8px 16px;
-  font-size: 16px;
-  color: #888;
-  background: #16213e;
+  font-size: 17px;
+  color: #aaa;
+  background: rgba(22, 33, 62, 0.6);
 
   &.error {
     color: #e94560;
@@ -176,8 +186,8 @@
   max-width: 500px;
   background: #16213e;
   border-radius: 24px 24px 0 0;
-  padding: 24px;
-  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  padding: 28px 24px;
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
   animation: slideUp 0.25s ease-out;
   pointer-events: auto;
 }
@@ -195,21 +205,21 @@
 }
 
 .settings-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  color: #e0e0e0;
+  color: #fff;
 }
 
 .settings-close {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #0f3460;
+  background: rgba(255,255,255,0.1);
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .setting-section {
@@ -217,11 +227,12 @@
 }
 
 .setting-label {
-  font-size: 15px;
+  font-size: 14px;
   color: #888;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  font-weight: 600;
 }
 
 .board-selector {
@@ -231,10 +242,10 @@
 }
 
 .board-chip {
-  padding: 10px 18px;
+  padding: 12px 20px;
   border-radius: 24px;
-  background: #0f3460;
-  font-size: 16px;
+  background: rgba(255,255,255,0.08);
+  font-size: 17px;
   cursor: pointer;
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
@@ -246,6 +257,7 @@
   &.active {
     background: #e94560;
     color: #fff;
+    font-weight: 600;
   }
 }
 
@@ -253,16 +265,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  font-size: 17px;
-  color: #ccc;
+  padding: 14px 0;
+  font-size: 18px;
+  color: #ddd;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .toggle {
-  width: 52px;
-  height: 28px;
-  border-radius: 14px;
-  background: #333;
+  width: 56px;
+  height: 32px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.15);
   position: relative;
   cursor: pointer;
   transition: background 0.2s;
@@ -273,29 +290,29 @@
 }
 
 .toggle-knob {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: #fff;
   position: absolute;
-  top: 2px;
-  left: 2px;
+  top: 3px;
+  left: 3px;
   transition: left 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
 .toggle.on .toggle-knob {
-  left: 26px;
+  left: 27px;
 }
 
 .editor-entry {
-  padding: 16px;
-  border-radius: 14px;
-  background: #0f3460;
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.08);
   text-align: center;
-  font-size: 17px;
+  font-size: 18px;
   cursor: pointer;
-  margin-top: 12px;
+  margin-top: 16px;
 
   &:active {
     transform: scale(0.98);
