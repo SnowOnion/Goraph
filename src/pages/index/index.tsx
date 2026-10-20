@@ -87,7 +87,7 @@ export default function Index() {
           onClick={(!canUndo || meta.ended) ? undefined : undo}
           onTouchEnd={(!canUndo || meta.ended) ? undefined : (e) => { e.preventDefault(); undo(); }}
         >
-          <Text className="action-icon">↩</Text>
+          <Text className="action-icon">↩️</Text>
           <Text className="action-label">悔棋</Text>
         </View>
         <View
@@ -95,7 +95,7 @@ export default function Index() {
           onClick={meta.ended ? undefined : pass}
           onTouchEnd={meta.ended ? undefined : (e) => { e.preventDefault(); pass(); }}
         >
-          <Text className="action-icon">⏭</Text>
+          <Text className="action-icon">⏭️</Text>
           <Text className="action-label">虚手</Text>
         </View>
         <View

@@ -151,8 +151,8 @@ export function BoardCanvas(props: BoardCanvasProps) {
       if (d < bestD) { bestD = d; bestId = parseInt(k); }
     }
 
-    const maxD = (scale * 40) ** 2;
-    if (bestD <= maxD && bestId >= 0 && gs[bestId]?.s === 0) {
+    // 始终吸附到最近节点（无距离阈值），只要有节点且为空
+    if (bestId >= 0 && gs[bestId]?.s === 0) {
       if (preview.current !== bestId) {
         preview.current = bestId;
         paint();

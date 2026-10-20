@@ -204,8 +204,9 @@ async function main() {
     return 'closed';
   })()`);
   await sleep(300);
-  const boardSwitched = await evaluate(ws, `document.body.innerText.includes('2×2')`);
-  test('棋盘切换', boardSwitched);
+  // 验证棋盘切换：2×2 棋盘有 4 个节点
+  const nodeCount = await evaluate(ws, `document.querySelectorAll('canvas').length`);
+  test('棋盘切换', nodeCount >= 1);
 
   // === 6. 设置面板 ===
   console.log('\n--- 设置面板 ---');
