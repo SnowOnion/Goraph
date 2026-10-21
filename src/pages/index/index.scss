@@ -164,6 +164,12 @@
   font-size: 17px;
   color: #9090a0;
   background: rgba(18, 18, 38, 0.6);
+  /* 固定高度，防止提示出现/消失时棋盘跳动 */
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 
   &.error {
     color: #ff6b6b;

@@ -117,12 +117,12 @@ export default function Index() {
         </View>
       </View>
 
-      {/* 信息提示 */}
-      {info && info.length > 1 && (
-        <View className={`info-bar ${info.includes('不合') || info.includes('禁止') ? 'error' : ''}`}>
-          <Text>{info}</Text>
-        </View>
-      )}
+      {/* 信息提示 —— 始终占据固定高度，防止棋盘跳动 */}
+      <View
+        className={`info-bar ${info.includes('不合') || info.includes('禁止') ? 'error' : ''}`}
+      >
+        <Text>{info && info.length > 1 ? info : '　'}</Text>
+      </View>
 
       {/* 设置面板 */}
       {showSettings && (

@@ -41,37 +41,27 @@ async function main() {
   await cdpSend(ws, 'Page.reload', { ignoreCache: true });
   await new Promise(r => setTimeout(r, 2000));
 
-  // 检查按钮尺寸
-  const btnSizes = await evaluate(ws, `(() => {
-    const btns = document.querySelectorAll('.action-btn');
-    return Array.from(btns).map(b => {
-      const r = b.getBoundingClientRect();
-      return { text: b.textContent.trim().substring(0, 6), w: Math.round(r.width), h: Math.round(r.height) };
-    });
+  // 检查 info-bar 是否存在及尺寸
+  const infoBar = await evaluate(ws, `(() => {
+    const bar = document.querySelector('.info-bar');
+    if (!bar) return { exists: false };
+    const r = bar.getBoundingClientRect();
+    return {
+      exists: true,
+      h: Math.round(r.height),
+      text: bar.textContent.trim(),
+      isAlwaysVisible: getComputedStyle(bar).display !== 'none',
+    };
   })()`);
-  console.log('按钮尺寸:', JSON.stringify(btnSizes, null, 2));
+  console.log('info-bar 状态:', JSON.stringify(infoBar, null, 2));
 
-  // 检查 turn-text 尺寸
-  const turnText = await evaluate(ws, `(() => {
-    const el = document.querySelector('.turn-text');
-    if (!el) return 'not found';
-    const style = window.getComputedStyle(el);
-    const r = el.getBoundingClientRect();
-    return { fontSize: style.fontSize, w: Math.round(r.width), h: Math.round(r.height) };
-  })()`);
-  console.log('回合文字:', JSON.stringify(turnText, null, 2));
-
-  // 检查棋盘尺寸
-  const canvasSize = await evaluate(ws, `(() => {
+  // 检查棋盘位置是否稳定（模拟触发提示）
+  const boardBefore = await evaluate(ws, `(() => {
     const c = document.querySelector('canvas');
     const r = c.getBoundingClientRect();
-    return { w: Math.round(r.width), h: Math.round(r.height) };
+    return { x: Math.round(r.x), y: Math.round(r.y), h: Math.round(r.height) };
   })()`);
-  console.log('棋盘尺寸:', JSON.stringify(canvasSize, null, 2));
-
-  // 检查屏幕宽度
-  const screen = await evaluate(ws, `({ w: window.innerWidth, h: window.innerHeight })`);
-  console.log('屏幕:', JSON.stringify(screen));
+  console.log('棋盘位置:', JSON.stringify(boardBefore));
 
   ws.close();
 }
