@@ -19,9 +19,7 @@ const config = {
   },
   copy: {
     patterns: [
-      { from: 'src/static/manifest.json', to: 'manifest.json' },
-      { from: 'src/static/sw.js', to: 'sw.js' },
-      { from: 'src/static/icons', to: 'icons' },
+      { from: 'public/', to: '' },
     ],
     options: {},
   },
