@@ -63,6 +63,9 @@ const config = {
         enable: true,
         config: {},
       },
+      pxtransform: {
+        enable: false,
+      },
       cssModules: {
         enable: false,
       },

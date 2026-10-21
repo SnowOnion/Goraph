@@ -145,6 +145,16 @@ export function BoardCanvas(props: BoardCanvasProps) {
     const c = cRef.current;
     if (!c) return;
     const rect = c.getBoundingClientRect();
+
+    // 移出棋盘范围 → 清除预览（取消落子）
+    if (cx < rect.left || cx > rect.right || cy < rect.top || cy > rect.bottom) {
+      if (preview.current !== null) {
+        preview.current = null;
+        paint();
+      }
+      return;
+    }
+
     const x = cx - rect.left;
     const y = cy - rect.top;
     const scale = scaleRef.current;
@@ -159,7 +169,7 @@ export function BoardCanvas(props: BoardCanvasProps) {
       if (d < bestD) { bestD = d; bestId = parseInt(k); }
     }
 
-    // 始终吸附到最近空节点
+    // 吸附到最近空节点
     if (bestId >= 0 && gs[bestId]?.s === 0) {
       if (preview.current !== bestId) {
         preview.current = bestId;
