@@ -131,6 +131,14 @@ export function BoardCanvas(props: BoardCanvasProps) {
     ctx.restore();
   };
 
+  /** 检查坐标是否在 canvas 范围内 */
+  const isInside = useCallback((cx: number, cy: number): boolean => {
+    const c = cRef.current;
+    if (!c) return false;
+    const rect = c.getBoundingClientRect();
+    return cx >= rect.left && cx <= rect.right && cy >= rect.top && cy <= rect.bottom;
+  }, []);
+
   const doPreview = useCallback((cx: number, cy: number) => {
     const pos = posRef.current;
     const gs = gsRef.current;
@@ -151,7 +159,7 @@ export function BoardCanvas(props: BoardCanvasProps) {
       if (d < bestD) { bestD = d; bestId = parseInt(k); }
     }
 
-    // 始终吸附到最近节点（无距离阈值），只要有节点且为空
+    // 始终吸附到最近空节点
     if (bestId >= 0 && gs[bestId]?.s === 0) {
       if (preview.current !== bestId) {
         preview.current = bestId;
@@ -163,14 +171,19 @@ export function BoardCanvas(props: BoardCanvasProps) {
     }
   }, []);
 
-  const doPlay = useCallback(() => {
+  const doPlay = useCallback((clientX?: number, clientY?: number) => {
     const gs = gsRef.current;
     const nid = preview.current;
     pressing.current = false;
     preview.current = null;
     paint();
-    if (nid != null && gs[nid]?.s === 0) onPlay(nid);
-  }, [onPlay]);
+    // 只有在棋盘范围内松开才落子
+    if (nid != null && gs[nid]?.s === 0) {
+      if (clientX !== undefined && clientY !== undefined && isInside(clientX, clientY)) {
+        onPlay(nid);
+      }
+    }
+  }, [onPlay, isInside]);
 
   // 用 callback ref 确保每次 canvas 创建/重新创建都绑定事件
   const canvasRef = useCallback((node: HTMLCanvasElement | null) => {
@@ -186,11 +199,11 @@ export function BoardCanvas(props: BoardCanvasProps) {
 
     const onMd = (e: MouseEvent) => { pressing.current = true; doPreview(e.clientX, e.clientY); };
     const onMm = (e: MouseEvent) => { if (pressing.current) doPreview(e.clientX, e.clientY); };
-    const onMu = () => { if (pressing.current) doPlay(); };
+    const onMu = (e: MouseEvent) => { if (pressing.current) doPlay(e.clientX, e.clientY); };
     const onMl = () => { pressing.current = false; preview.current = null; paint(); };
     const onTs = (e: TouchEvent) => { e.preventDefault(); pressing.current = true; const t = e.touches[0]; if (t) doPreview(t.clientX, t.clientY); };
     const onTm = (e: TouchEvent) => { e.preventDefault(); if (pressing.current) { const t = e.touches[0]; if (t) doPreview(t.clientX, t.clientY); } };
-    const onTe = (e: TouchEvent) => { e.preventDefault(); if (pressing.current) doPlay(); };
+    const onTe = (e: TouchEvent) => { e.preventDefault(); if (pressing.current) { const t = e.changedTouches[0]; doPlay(t?.clientX, t?.clientY); } };
 
     node.addEventListener('mousedown', onMd);
     node.addEventListener('mousemove', onMm);

@@ -17,8 +17,9 @@ export default function Index() {
 
   const calcCanvasSize = useCallback(() => {
     const sysInfo = Taro.getSystemInfoSync();
-    const maxSize = Math.min(sysInfo.windowWidth - 24, sysInfo.windowHeight * 0.46, 460);
-    setCanvasSize({ width: Math.floor(maxSize), height: Math.floor(maxSize) });
+    // 棋盘尽可能大：使用全屏宽度
+    const size = Math.min(sysInfo.windowWidth, sysInfo.windowHeight * 0.5);
+    setCanvasSize({ width: Math.floor(size), height: Math.floor(size) });
   }, []);
 
   useReady(() => calcCanvasSize());
@@ -125,8 +126,16 @@ export default function Index() {
 
       {/* 设置面板 */}
       {showSettings && (
-        <View className="settings-overlay" onClick={() => setShowSettings(false)}>
-          <View className="settings-panel" onClick={(e: any) => e.stopPropagation()}>
+        <View
+          className="settings-overlay"
+          onClick={() => setShowSettings(false)}
+          onTouchEnd={(e: any) => { e.preventDefault(); setShowSettings(false); }}
+        >
+          <View
+            className="settings-panel"
+            onClick={(e: any) => e.stopPropagation?.()}
+            onTouchEnd={(e: any) => e.stopPropagation?.()}
+          >
             <View className="settings-header">
               <Text className="settings-title">设置</Text>
               <View className="settings-close" onClick={() => setShowSettings(false)}>

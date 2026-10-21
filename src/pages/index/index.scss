@@ -10,6 +10,7 @@
   overflow-x: hidden;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* ---- 顶栏 ---- */
@@ -17,8 +18,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 24px;
-  padding-top: max(18px, env(safe-area-inset-top));
+  padding: 14px 20px;
+  padding-top: max(14px, env(safe-area-inset-top));
   background: rgba(18, 18, 38, 0.98);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -27,12 +28,12 @@
 .turn-indicator {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .stone-icon {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 3px solid transparent;
   flex-shrink: 0;
@@ -57,21 +58,21 @@
 
 .capture-info {
   display: flex;
-  gap: 22px;
+  gap: 20px;
 }
 
 .capture-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
+  gap: 6px;
+  font-size: 20px;
   font-weight: 500;
   color: #a0a0b0;
 }
 
 .stone-dot {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
 
   &.black {
@@ -85,14 +86,14 @@
   }
 }
 
-/* ---- 棋盘 ---- */
+/* ---- 棋盘 —— 全屏宽度 ---- */
 .board-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px 20px;
   flex: 1;
   min-height: 0;
+  padding: 8px 0;
 }
 
 /* ---- 操作栏 ---- */
@@ -100,9 +101,9 @@
   display: flex;
   justify-content: center;
   align-items: stretch;
-  gap: 12px;
-  padding: 16px 24px 20px;
-  padding-bottom: max(20px, env(safe-area-inset-bottom));
+  gap: 10px;
+  padding: 12px 16px 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
   background: rgba(18, 18, 38, 0.98);
   backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255,255,255,0.06);
@@ -114,24 +115,24 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 16px 24px;
+  padding: 14px 20px;
   border-radius: 18px;
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.08);
   cursor: pointer;
   transition: all 0.12s;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
-  min-width: 82px;
+  min-width: 76px;
   min-height: 72px;
 
   &:active {
-    transform: scale(0.93);
-    background: rgba(255,255,255,0.14);
+    transform: scale(0.92);
+    background: rgba(255,255,255,0.16);
   }
 
   &.primary {
     background: linear-gradient(135deg, #ff6b6b 0%, #c0392b 100%);
-    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.35);
+    box-shadow: 0 6px 24px rgba(255, 107, 107, 0.4);
 
     &:active {
       background: linear-gradient(135deg, #c0392b 0%, #962d22 100%);
@@ -145,21 +146,21 @@
 }
 
 .action-icon {
-  font-size: 32px;
+  font-size: 30px;
   line-height: 1;
 }
 
 .action-label {
   font-size: 15px;
-  color: rgba(255,255,255,0.85);
+  color: rgba(255,255,255,0.9);
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
 }
 
 /* ---- 信息提示 ---- */
 .info-bar {
   text-align: center;
-  padding: 10px 24px;
+  padding: 8px 16px;
   font-size: 17px;
   color: #9090a0;
   background: rgba(18, 18, 38, 0.6);
@@ -173,12 +174,12 @@
 .settings-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 100;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .settings-panel {
@@ -186,8 +187,8 @@
   max-width: 520px;
   background: #14142e;
   border-radius: 28px 28px 0 0;
-  padding: 30px 28px;
-  padding-bottom: max(30px, env(safe-area-inset-bottom));
+  padding: 28px 24px;
+  padding-bottom: max(28px, env(safe-area-inset-bottom));
   animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
   pointer-events: auto;
 }
@@ -201,7 +202,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .settings-title {
@@ -211,24 +212,24 @@
 }
 
 .settings-close {
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   background: rgba(255,255,255,0.1);
   cursor: pointer;
-  font-size: 20px;
+  font-size: 22px;
   color: #999;
 }
 
 .setting-section {
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
 .setting-label {
-  font-size: 13px;
+  font-size: 14px;
   color: #888;
   margin-bottom: 14px;
   text-transform: uppercase;
@@ -239,14 +240,14 @@
 .board-selector {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
 .board-chip {
   padding: 12px 22px;
   border-radius: 28px;
-  background: rgba(255,255,255,0.07);
-  font-size: 17px;
+  background: rgba(255,255,255,0.08);
+  font-size: 18px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.12s;
@@ -310,9 +311,9 @@
 .editor-entry {
   padding: 18px;
   border-radius: 18px;
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.08);
   text-align: center;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 500;
   cursor: pointer;
   margin-top: 14px;
