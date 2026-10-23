@@ -18,9 +18,7 @@ const config = {
     '@': path.resolve(__dirname, '..', 'src'),
   },
   copy: {
-    patterns: [
-      { from: 'public/', to: '' },
-    ],
+    patterns: [],
     options: {},
   },
   framework: 'react',
