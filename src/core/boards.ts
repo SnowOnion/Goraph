@@ -161,6 +161,107 @@ function buildNxNPositions(n: number, padding?: number, wh?: number): PositionsM
 }
 
 /* ------------------------------------------------------------------ */
+/*  晶格棋盘：六边形（三角晶格）/ 三角形 / 蜂巢                             */
+/* ------------------------------------------------------------------ */
+
+interface RawPoint { x: number; y: number }
+
+/** 把任意坐标等比缩放、居中到 [padding, 1000 - padding] 的正方形里 */
+function fitPositions(points: RawPoint[], padding = 80): PositionsMap {
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const span = Math.max(maxX - minX, maxY - minY) || 1;
+  const k = (1000 - 2 * padding) / span;
+  const offX = (1000 - (maxX - minX) * k) / 2;
+  const offY = (1000 - (maxY - minY) * k) / 2;
+  const result: PositionsMap = {};
+  points.forEach((p, i) => {
+    result[i] = { x: offX + (p.x - minX) * k, y: offY + (p.y - minY) * k };
+  });
+  return result;
+}
+
+/** 由「格点 key → 坐标」和邻居函数建图，节点按插入顺序编号 */
+function buildLattice(
+  cells: [number, number][],
+  toPoint: (a: number, b: number) => RawPoint,
+  neighbors: [number, number][],
+): { adj: AdjacencyList; p: PositionsMap } {
+  const id = new Map(cells.map(([a, b], i) => [`${a},${b}`, i]));
+  const adj: AdjacencyList = {};
+  cells.forEach(([a, b], i) => {
+    adj[i] = [];
+    for (const [da, db] of neighbors) {
+      const j = id.get(`${a + da},${b + db}`);
+      if (j !== undefined) adj[i].push(j);
+    }
+  });
+  return { adj, p: fitPositions(cells.map(([a, b]) => toPoint(a, b))) };
+}
+
+const SQRT3 = Math.sqrt(3);
+const TRI_NEIGHBORS: [number, number][] = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, -1], [-1, 1]];
+
+/** 六边形棋盘：边长 n 的正六边形区域内的三角晶格，内部每点 6 个邻居，共 3n(n-1)+1 点 */
+export function buildHexagonBoard(n: number) {
+  const cells: [number, number][] = [];
+  for (let r = -(n - 1); r <= n - 1; r++) {
+    for (let q = -(n - 1); q <= n - 1; q++) {
+      if (Math.abs(q + r) <= n - 1) cells.push([q, r]);
+    }
+  }
+  return buildLattice(cells, (q, r) => ({ x: q + r / 2, y: (r * SQRT3) / 2 }), TRI_NEIGHBORS);
+}
+
+/** 三角形棋盘：边长 n 的正三角形区域内的三角晶格，共 n(n+1)/2 点 */
+export function buildTriangleBoard(n: number) {
+  const cells: [number, number][] = [];
+  for (let i = 0; i < n; i++) for (let j = 0; j <= i; j++) cells.push([i, j]);
+  return buildLattice(
+    cells,
+    (i, j) => ({ x: j - i / 2, y: (i * SQRT3) / 2 }),
+    [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [-1, -1]],
+  );
+}
+
+/** 蜂巢棋盘：半径 R 的六边形拼块（3R(R+1)+1 个六边形）的顶点与边，每点至多 3 个邻居 */
+export function buildHoneycombBoard(R: number) {
+  const index = new Map<string, number>();
+  const points: RawPoint[] = [];
+  const adj: AdjacencyList = {};
+  const vertex = (x: number, y: number) => {
+    // 取整到 1e-4 去浮点误差；`|| 0` 把 -0 归一成 0
+    const key = `${Math.round(x * 1e4) || 0},${Math.round(y * 1e4) || 0}`;
+    let i = index.get(key);
+    if (i === undefined) {
+      i = points.length;
+      index.set(key, i);
+      points.push({ x, y });
+      adj[i] = [];
+    }
+    return i;
+  };
+  const link = (a: number, b: number) => {
+    if (!adj[a].includes(b)) { adj[a].push(b); adj[b].push(a); }
+  };
+  for (let r = -R; r <= R; r++) {
+    for (let q = -R; q <= R; q++) {
+      if (Math.abs(q + r) > R) continue;
+      const cx = SQRT3 * (q + r / 2);
+      const cy = 1.5 * r;
+      const corners = [0, 1, 2, 3, 4, 5].map((k) => {
+        const t = (Math.PI / 3) * k + Math.PI / 6;
+        return vertex(cx + Math.cos(t), cy + Math.sin(t));
+      });
+      for (let k = 0; k < 6; k++) link(corners[k], corners[(k + 1) % 6]);
+    }
+  }
+  return { adj, p: fitPositions(points) };
+}
+
+/* ------------------------------------------------------------------ */
 /*  导出                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -172,6 +273,9 @@ export const BOARDS: Board[] = [
   { name: '4×4', adj: buildNxNAdj(4), p: buildNxNPositions(4), cat: 'rectangular', w: 4, h: 4 },
   { name: '9×9', adj: buildNxNAdj(9), p: buildNxNPositions(9), cat: 'rectangular', w: 9, h: 9 },
   { name: '13×13', adj: buildNxNAdj(13), p: buildNxNPositions(13), cat: 'rectangular', w: 13, h: 13 },
+  { name: '六边形', ...buildHexagonBoard(5), cat: 'hexagon' },
+  { name: '三角形', ...buildTriangleBoard(8), cat: 'triangle' },
+  { name: '蜂巢', ...buildHoneycombBoard(2), cat: 'honeycomb' },
 ];
 
 /** 默认棋盘索引 */

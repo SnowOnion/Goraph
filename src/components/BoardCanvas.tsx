@@ -1,5 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { AdjacencyList, PositionsMap, GameState } from '@/core/types';
+import { stoneRadius } from '@/core/geometry';
 
 interface BoardCanvasProps {
   adj: AdjacencyList;
@@ -81,7 +82,7 @@ export function BoardCanvas(props: BoardCanvasProps) {
       ctx.fill();
     }
 
-    const r = scale * 32;
+    const r = scale * stoneRadius(a, pos);
     for (const k in gs) {
       const n = parseInt(k);
       if (gs[n].s === 0) continue;
