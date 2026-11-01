@@ -134,7 +134,10 @@ Taro **不会**把 `public/` 复制到 `dist/`。必须执行 `cp -r public/* di
 
 ### 6.1 核心逻辑与 UI 解耦
 `src/core/` 全部是纯 TypeScript，不依赖 DOM / Taro / React，可单独测试、可在小程序/Node 复用。
-- `game-engine.ts`：气数维护、棋串合并、提子、打劫检测、计分
+- `game-engine.ts`：气数维护、棋串合并、提子、计分
+  - `tryPlay(adj, position, nodeID, seenHashes)`：纯函数落子入口（不改入参），返回 `{ok, position}` 或 `{ok:false, error: 'ended'|'occupied'|'suicide'|'superko'}`
+  - `calculateScore`：数子法（Tromp-Taylor），子 + 只接触己方的连通空域；提子不额外计分；贴目加给白
+  - 禁止全同再现（超级劫）默认开：`useGame` 从历史栈里每步的 `boardHash` 推导已出现局面，悔棋自然回滚
 - `boards.ts`：7 个预设棋盘（福/玫瑰/囧/2×2/4×4/9×9/13×13）+ 自定义棋盘加载
 - `storage.ts`：跨平台存储（H5 用 localStorage，小程序用 Taro API）
 

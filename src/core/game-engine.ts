@@ -25,50 +25,134 @@ export function boardHash(gameState: GameState): string {
   return hash;
 }
 
+/** 终局计分明细 */
+export interface ScoreDetail {
+  black: number;
+  white: number;
+  blackStones: number;
+  whiteStones: number;
+  blackTerritory: number;
+  whiteTerritory: number;
+  /** 不属于任何一方的空点（单官 / 公气） */
+  neutral: number;
+  komi: number;
+}
+
 /**
- * 计算终局得分（中国规则简化版）
- * 得分 = 活棋子数 + 围住的空点数 + 提子数
+ * 数子法计分（中国规则 / Tromp-Taylor 面积计分）：
+ * 得分 = 盘上己方棋子数 + 只与己方棋子相邻的空域大小（白方另加贴目）。
+ * 空域按连通块整体判定，与双方都相邻或不与任何棋子相邻的空域算中立。
+ * 提子数不计入：数子法下提子已体现在盘面上。
  */
-export function calculateScore(
-  gameState: GameState,
-  adj: AdjacencyList,
-  meta: GameMeta,
-): { black: number; white: number } {
+export function calculateScore(gameState: GameState, adj: AdjacencyList, komi = 0): ScoreDetail {
   let blackStones = 0;
   let whiteStones = 0;
   let blackTerritory = 0;
   let whiteTerritory = 0;
+  let neutral = 0;
+  const visited = new Set<number>();
 
-  // 计算活棋子
   for (const id in gameState) {
-    const s = gameState[parseInt(id)].s;
-    if (s === 1) blackStones++;
-    else if (s === 2) whiteStones++;
-  }
+    const start = parseInt(id);
+    const s = gameState[start].s;
+    if (s === 1) { blackStones++; continue; }
+    if (s === 2) { whiteStones++; continue; }
+    if (visited.has(start)) continue;
 
-  // 计算领地（简单版：空点相邻只有己方棋子则算领地）
-  for (const id in gameState) {
-    const nodeID = parseInt(id);
-    if (gameState[nodeID].s !== 0) continue;
-
-    const neighbors = adj[nodeID];
+    let size = 0;
     let touchesBlack = false;
     let touchesWhite = false;
-
-    for (const nid of neighbors) {
-      const ns = gameState[nid].s;
-      if (ns === 1) touchesBlack = true;
-      else if (ns === 2) touchesWhite = true;
+    const stack = [start];
+    visited.add(start);
+    while (stack.length) {
+      const n = stack.pop()!;
+      size++;
+      for (const m of adj[n] || []) {
+        const ms = gameState[m].s;
+        if (ms === 1) touchesBlack = true;
+        else if (ms === 2) touchesWhite = true;
+        else if (!visited.has(m)) {
+          visited.add(m);
+          stack.push(m);
+        }
+      }
     }
-
-    if (touchesBlack && !touchesWhite) blackTerritory++;
-    else if (touchesWhite && !touchesBlack) whiteTerritory++;
+    if (touchesBlack && !touchesWhite) blackTerritory += size;
+    else if (touchesWhite && !touchesBlack) whiteTerritory += size;
+    else neutral += size;
   }
 
   return {
-    black: blackStones + blackTerritory + meta.capturedByBlack,
-    white: whiteStones + whiteTerritory + meta.capturedByWhite,
+    black: blackStones + blackTerritory,
+    white: whiteStones + whiteTerritory + komi,
+    blackStones,
+    whiteStones,
+    blackTerritory,
+    whiteTerritory,
+    neutral,
+    komi,
   };
+}
+
+export function cloneGameState(gs: GameState): GameState {
+  const result: GameState = {};
+  for (const id in gs) {
+    result[parseInt(id)] = { ...gs[parseInt(id)] };
+  }
+  return result;
+}
+
+export function cloneStoneStrings(ss: StoneStringsMap): StoneStringsMap {
+  const result: StoneStringsMap = {};
+  for (const id in ss) {
+    const s = ss[parseInt(id)];
+    result[parseInt(id)] = { chiSet: new Set(s.chiSet), nodes: new Set(s.nodes) };
+  }
+  return result;
+}
+
+/** 一个完整局面：盘面 + 棋串 + 元数据 */
+export interface GamePosition {
+  gameState: GameState;
+  stoneStrings: StoneStringsMap;
+  meta: GameMeta;
+}
+
+export type MoveError = 'ended' | 'occupied' | 'suicide' | 'superko';
+
+export type PlayResult =
+  | { ok: true; position: GamePosition }
+  | { ok: false; error: MoveError };
+
+/**
+ * 不修改入参地尝试让 meta.next 一方在 nodeID 落子。
+ * seenHashes 非空时启用「禁止全同再现」（位置超级劫）：落子后的盘面不得与其中任何一个相同。
+ * 成功时返回的新局面已轮到对方、passed 清零。
+ */
+export function tryPlay(
+  adj: AdjacencyList,
+  position: GamePosition,
+  nodeID: number,
+  seenHashes: Set<string> | null = null,
+): PlayResult {
+  const { gameState, stoneStrings, meta } = position;
+  if (meta.ended) return { ok: false, error: 'ended' };
+  if (gameState[nodeID]?.s !== 0) return { ok: false, error: 'occupied' };
+
+  const next: GamePosition = {
+    gameState: cloneGameState(gameState),
+    stoneStrings: cloneStoneStrings(stoneStrings),
+    meta: { ...meta },
+  };
+  if (!validWrtRuleAndUpdate(adj, next.gameState, next.stoneStrings, next.meta, nodeID, meta.next)) {
+    return { ok: false, error: 'suicide' };
+  }
+  if (seenHashes && seenHashes.has(boardHash(next.gameState))) {
+    return { ok: false, error: 'superko' };
+  }
+  flip(next.meta);
+  next.meta.passed = 0;
+  return { ok: true, position: next };
 }
 
 /** 初始化游戏状态 */
@@ -275,26 +359,4 @@ export function executePass(meta: GameMeta): void {
   if (meta.passed >= 2) {
     meta.ended = true;
   }
-}
-
-/** 重新开始游戏 */
-export function resetGame(
-  adj: AdjacencyList,
-  gameState: GameState,
-  stoneStrings: StoneStringsMap,
-  meta: GameMeta,
-): void {
-  // 重置所有节点
-  for (const id in gameState) {
-    gameState[parseInt(id)] = { s: 0, stoneStringID: null };
-  }
-  // 清空棋串
-  for (const key in stoneStrings) {
-    delete stoneStrings[parseInt(key)];
-  }
-  // 重置元数据
-  meta.next = 1;
-  meta.passed = 0;
-  meta.ended = false;
-  meta._nextStoneStringID = 0;
 }
