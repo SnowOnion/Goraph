@@ -1,161 +1,86 @@
 /**
- * Playwright 冒烟测试
- * 运行: npx playwright test --headed
- * headed 模式下你能看到浏览器窗口弹出，所有操作可视化
+ * Playwright 冒烟测试（H5）
+ * 运行: npm run test:e2e        (headless)
+ *       npm run test:e2e:headed (有头)
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
-const BASE_URL = 'http://localhost:10086/#/pages/index/index';
+const GAME_URL = '/#/pages/index/index';
+const EDITOR_URL = '/#/pages/editor/index';
+
+/** 收集页面错误（过滤 dev server 下已知无害的告警） */
+function collectErrors(page: Page): string[] {
+  const errors: string[] = [];
+  page.on('pageerror', (err) => errors.push(err.message));
+  page.on('console', (msg) => {
+    if (msg.type() !== 'error') return;
+    const t = msg.text();
+    if (t.includes('unsupported MIME type') || t.includes('preventDefault inside passive')) return;
+    errors.push(t);
+  });
+  return errors;
+}
+
+/** 在棋盘坐标系（0..1000）的 (x, y) 处点一下 */
+async function tapBoard(page: Page, x: number, y: number) {
+  const box = await page.locator('canvas').boundingBox();
+  if (!box) throw new Error('Canvas not found');
+  const scale = Math.min(box.width, box.height) / 1000;
+  await page.mouse.move(box.x + x * scale, box.y + y * scale);
+  await page.mouse.down();
+  await page.mouse.up();
+}
+
+const turn = (page: Page) => page.locator('.turn-text');
 
 test.describe('Goraph 冒烟测试', () => {
-  test('页面加载无控制台错误', async ({ page }) => {
-    const errors: string[] = [];
-    page.on('console', (msg) => {
-      if (msg.type() === 'error') errors.push(msg.text());
-    });
-    page.on('pageerror', (err) => errors.push(err.message));
-
-    await page.goto(BASE_URL);
-    await page.waitForTimeout(1000);
-
-    // 截图：初始状态
-    await page.screenshot({ path: 'test-results/01-initial.png', fullPage: true });
-
-    // 过滤掉 dev server 已知的无害警告
-    const realErrors = errors.filter(e => 
-      !e.includes('unsupported MIME type') &&  // sw.js dev server 问题
-      !e.includes('preventDefault inside passive')  // passive event listener
-    );
-    expect(realErrors, `控制台错误: ${realErrors.join('\n')}`).toHaveLength(0);
-  });
-
-  test('棋盘渲染和基本元素', async ({ page }) => {
-    await page.goto(BASE_URL);
-    await page.waitForTimeout(500);
-
-    // 标题（只在页面内容区查找，排除导航栏）
-    await expect(page.locator('#app').getByText('图上的围棋', { exact: true })).toBeVisible();
-
-    // 棋盘选择器
-    await expect(page.getByText('福')).toBeVisible();
-    await expect(page.getByText('囧')).toBeVisible();
-
-    // 操作按钮
-    await expect(page.getByText('悔棋')).toBeVisible();
-    await expect(page.getByText('重新开始')).toBeVisible();
-    await expect(page.getByText('放弃一手')).toBeVisible();
-
-    // 手数显示
-    await expect(page.getByText('显示手数序号')).toBeVisible();
-
-    await page.screenshot({ path: 'test-results/02-elements.png', fullPage: true });
-  });
-
-  test('切换棋盘', async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (err) => errors.push(err.message));
-
-    await page.goto(BASE_URL);
-    await page.waitForTimeout(500);
-
-    // 切换到囧棋盘
-    await page.getByText('囧').click();
-    await page.waitForTimeout(500);
-    await page.screenshot({ path: 'test-results/03-board-jiong.png', fullPage: true });
-
-    expect(errors).toHaveLength(0);
-  });
-
-  test('拖动落子交互', async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (err) => errors.push(err.message));
-
-    await page.goto(BASE_URL);
-    await page.waitForTimeout(500);
-
-    // 切换到囧棋盘
-    await page.getByText('囧').click();
-    await page.waitForTimeout(300);
-
-    // 获取 canvas 位置
-    const canvas = page.locator('canvas');
-    const box = await canvas.boundingBox();
-    if (!box) throw new Error('Canvas not found');
-
-    const scale = box.width / 1000;
-
-    // 在 (250, 250) 按下，拖动到 (500, 250)，松开
-    const startX = box.x + 250 * scale;
-    const startY = box.y + 250 * scale;
-    const endX = box.x + 500 * scale;
-    const endY = box.y + 500 * scale;
-
-    // 按下
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.waitForTimeout(100);
-
-    // 拖动（分步）
-    for (let i = 1; i <= 4; i++) {
-      const x = startX + (endX - startX) * (i / 4);
-      const y = startY + (endY - startY) * (i / 4);
-      await page.mouse.move(x, y);
-      await page.waitForTimeout(50);
+  test('对弈页加载无错误，基本元素齐全', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(GAME_URL);
+    await expect(page.locator('canvas')).toBeVisible();
+    for (const label of ['悔棋', '虚手', '重来', '设置']) {
+      await expect(page.getByText(label, { exact: true })).toBeVisible();
     }
-
-    await page.waitForTimeout(100);
-    await page.screenshot({ path: 'test-results/04-during-drag.png', fullPage: true });
-
-    // 松开
-    await page.mouse.up();
-    await page.waitForTimeout(300);
-
-    await page.screenshot({ path: 'test-results/05-after-place.png', fullPage: true });
-
-    expect(errors).toHaveLength(0);
+    await expect(turn(page)).toHaveText('黑');
+    expect(errors).toEqual([]);
   });
 
-  test('悔棋功能', async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (err) => errors.push(err.message));
+  test('落子后轮到白，悔棋后回到黑', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(GAME_URL);
+    await expect(page.locator('canvas')).toBeVisible();
+    // 默认棋盘「囧」，节点 0 位于 (200, 200)
+    await tapBoard(page, 200, 200);
+    await expect(turn(page)).toHaveText('白');
+    await page.getByText('悔棋', { exact: true }).click();
+    await expect(turn(page)).toHaveText('黑');
+    expect(errors).toEqual([]);
+  });
 
-    await page.goto(BASE_URL);
-    await page.waitForTimeout(500);
+  test('双方连续虚手 → 终局弹窗', async ({ page }) => {
+    await page.goto(GAME_URL);
+    await page.getByText('虚手', { exact: true }).click();
+    await expect(turn(page)).toHaveText('白');
+    await page.getByText('虚手', { exact: true }).click();
+    await expect(page.getByText('对局结束')).toBeVisible();
+  });
 
-    // 落一子
-    const canvas = page.locator('canvas');
-    const box = await canvas.boundingBox();
-    if (!box) throw new Error('Canvas not found');
-    const scale = box.width / 1000;
-
-    await page.mouse.move(box.x + 500 * scale, box.y + 250 * scale);
-    await page.mouse.down();
-    await page.mouse.move(box.x + 600 * scale, box.y + 350 * scale);
-    await page.mouse.up();
-    await page.waitForTimeout(300);
-
-    // 点击悔棋
-    await page.getByText('悔棋').click();
-    await page.waitForTimeout(300);
-    await page.screenshot({ path: 'test-results/06-after-undo.png', fullPage: true });
-
-    expect(errors).toHaveLength(0);
+  test('设置面板切换棋盘', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(GAME_URL);
+    await page.getByText('设置', { exact: true }).click();
+    await expect(page.locator('.settings-panel')).toBeVisible();
+    await page.locator('.board-chip', { hasText: '9×9' }).click();
+    await expect(page.locator('.board-chip.active')).toHaveText('9×9');
+    expect(errors).toEqual([]);
   });
 
   test('编辑器页面', async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (err) => errors.push(err.message));
-
-    await page.goto('http://localhost:10086/#/pages/editor/index');
-    await page.waitForTimeout(1000);
-
-    await expect(page.locator('#app').getByText('棋盘编辑器', { exact: true })).toBeVisible();
-    await expect(page.getByText('⊕')).toBeVisible();
-    await expect(page.getByText('╱')).toBeVisible();
-    await expect(page.getByText('保存')).toBeVisible();
-
-    await page.screenshot({ path: 'test-results/07-editor.png', fullPage: true });
-
-    expect(errors).toHaveLength(0);
+    const errors = collectErrors(page);
+    await page.goto(EDITOR_URL);
+    await expect(page.locator('.editor-title')).toHaveText('棋盘编辑器');
+    await expect(page.getByText('保存', { exact: true })).toBeVisible();
+    await expect(page.getByText(/节点: 0 · 边: 0/)).toBeVisible();
+    expect(errors).toEqual([]);
   });
 });

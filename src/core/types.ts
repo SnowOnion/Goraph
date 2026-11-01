@@ -34,20 +34,26 @@ export interface NodeState {
   stoneStringID: number | null;  // 所在棋串ID
 }
 
-/** 棋串映射 */
-export type StoneStringsMap = Record<number, StoneString>;
+/** 棋盘局面：节点ID -> 节点状态 */
+export type GameState = Record<number, NodeState>;
 
-/** 落子历史快照 */
-export interface HistorySnapshot {
-  gameState: GameState;
-  stoneStrings: StoneStringsMap;
-  meta: GameMeta;
-  /** 节点ID -> 落子手数（用于在棋子上显示序号） */
-  moveNumbers: Record<number, number>;
-  /** 最后一手落子位置（高亮显示） */
-  lastMove: number | null;
-  moveCount: number;
+/** 棋串：一组相连同色棋子及其气 */
+export interface StoneString {
+  chiSet: Set<number>;
+  nodes: Set<number>;
 }
 
 /** 棋串映射 */
 export type StoneStringsMap = Record<number, StoneString>;
+
+/** 对局元数据 */
+export interface GameMeta {
+  next: StoneColor;
+  passed: number;
+  ended: boolean;
+  _nextStoneStringID: number;
+  /** 黑方提子数 */
+  capturedByBlack: number;
+  /** 白方提子数 */
+  capturedByWhite: number;
+}

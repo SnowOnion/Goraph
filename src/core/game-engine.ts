@@ -4,19 +4,9 @@
  * 迁移自 legacy/script/index.js 的核心算法部分
  */
 
-import { AdjacencyList, PositionsMap, StoneColor, GameState, StoneStringsMap } from './types';
+import { AdjacencyList, PositionsMap, StoneColor, GameState, StoneStringsMap, GameMeta } from './types';
 
-/** 对局元数据 */
-export interface GameMeta {
-  next: StoneColor;
-  passed: number;
-  ended: boolean;
-  _nextStoneStringID: number;
-  /** 黑方提子数 */
-  capturedByBlack: number;
-  /** 白方提子数 */
-  capturedByWhite: number;
-}
+export type { GameMeta } from './types';
 
 export function oppoColor(color: StoneColor): StoneColor {
   return (3 - color) as StoneColor;

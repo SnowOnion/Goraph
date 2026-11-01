@@ -5,6 +5,9 @@
 
 import { AdjacencyList, PositionsMap, Board } from './types';
 
+/** 编辑器工具类型 */
+export type EditorTool = 'select' | 'addNode' | 'addEdge' | 'delete';
+
 /** 编辑器状态 */
 export interface EditorState {
   adj: AdjacencyList;

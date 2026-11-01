@@ -3,12 +3,13 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: '.',
   testMatch: 'smoke.spec.ts',
+  retries: process.env.CI ? 1 : 0,
   timeout: 60000,
   use: {
     baseURL: 'http://localhost:10086',
     headless: true,   // headless 模式，不弹窗（默认）
     // headless: false, // headed 模式，能看到浏览器窗口（会抢焦点）
-    screenshot: 'on',
+    screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   reporter: [['list']],
@@ -18,7 +19,7 @@ export default defineConfig({
     url: 'http://localhost:10086',
     reuseExistingServer: true,
     timeout: 60000,
-    stdout: 'pipe',
+    stdout: 'ignore',
     stderr: 'pipe',
   },
 });

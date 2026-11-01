@@ -26,7 +26,8 @@
 | 语言 | TypeScript |
 | 构建 | webpack5（`@tarojs/webpack5-runner`） |
 | 渲染 | Canvas 2D |
-| 测试 | Playwright（冒烟）+ `test/regression.js`（CDP 回归） |
+| 测试 | Vitest（`src/core` 单测）+ Playwright（H5 冒烟） |
+| CI | GitHub Actions（`.github/workflows/ci.yml`：typecheck → 单测 → build:h5 → 冒烟） |
 | 包管理 | npm |
 
 配置文件：`config/index.ts`（Taro 配置）、`project.config.json`（小程序）、`babel.config.js`、`tsconfig.json`、`playwright.config.ts`
@@ -55,7 +56,6 @@ Goraph/
 │   │   ├── EditorCanvas.tsx     编辑器画布
 │   │   ├── GameEndDialog.tsx    终局弹窗
 │   │   ├── Text.tsx             ★ 自定义 Text（绕开 Taro 的坑）
-│   │   └── GameControls.tsx     ⚠ 死代码，无人引用，可删
 │   ├── pages/
 │   │   ├── index/               对弈页（+ index.scss）
 │   │   └── editor/              编辑器页（+ editor.scss）
@@ -64,7 +64,9 @@ Goraph/
 ├── config/                    Taro 构建配置
 ├── public/                    PWA 资源（manifest.json / sw.js / icons/）
 ├── scripts/deploy.sh          一键部署脚本
-├── test/                      测试（measure.js / regression.js）
+├── src/core/__tests__/        核心逻辑单测（Vitest）
+├── smoke.spec.ts              H5 冒烟测试（Playwright）
+├── test/measure.js            打印 UI 元素实际像素尺寸
 ├── docs/                      文档（deploy.md / regression-tests.md / …）
 ├── legacy/                    旧版 vanilla JS 源码（备份）
 └── doc/                       更早期的调研笔记
@@ -87,8 +89,10 @@ npm run build:weapp
 ./scripts/deploy.sh h5    # 构建 + 复制 PWA 资源
 
 # 测试
-npm run test              # Playwright（headless）
-npm run test:headed       # Playwright（有头）
+npm run typecheck         # tsc --noEmit（CI 必过）
+npm test                  # Vitest 单测（src/core）
+npm run test:e2e          # Playwright 冒烟（headless，自动起 dev server）
+npm run test:e2e:headed   # Playwright 冒烟（有头）
 node test/measure.js      # 打印 UI 元素实际像素尺寸
 ```
 
@@ -164,15 +168,13 @@ Taro **不会**把 `public/` 复制到 `dist/`。必须执行 `cp -r public/* di
 - ✅ PWA（manifest + service worker）
 - ✅ 微信小程序编译通过
 - ✅ 部署文档 + 部署脚本
-- ✅ 回归测试框架
+- ✅ 单测（Vitest）+ 冒烟测试（Playwright）+ CI
 
 ### 待办 / 建议
-1. **删除死代码** `src/components/GameControls.tsx`（无人引用）
-2. **修复回归测试**（当前 10/11 通过；`test/regression.js` 的虚手用例受 Taro 事件时序影响）
-3. **小程序端 Canvas 适配**：BoardCanvas 用的是原生 canvas，小程序端需改用 Taro `<Canvas type="2d">` 并单独验证
-4. **原生 App**：Capacitor 打包（规划，未实施）
-5. **OGR 光学图识别**：`editor.ts` 已预留接口，未实现
-6. **多人对战**：未实现
+1. **小程序端 Canvas 适配**：BoardCanvas 用的是原生 canvas，小程序端需改用 Taro `<Canvas type="2d">` 并单独验证
+2. **原生 App**：Capacitor 打包（规划，未实施）
+3. **OGR 光学图识别**：`editor.ts` 已预留接口，未实现
+4. **多人对战**：未实现
 
 ---
 
