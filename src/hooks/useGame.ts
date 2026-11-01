@@ -73,7 +73,8 @@ type Action =
   | { type: 'TOGGLE_NO_REPEAT' }
   | { type: 'TOGGLE_AI' }
   | { type: 'REFRESH_BOARDS' }
-  | { type: 'UNDO' };
+  /** untilColor：一直悔到轮到该方为止（与 AI 对局时悔到玩家回合） */
+  | { type: 'UNDO'; untilColor?: StoneColor };
 
 const MOVE_ERROR_TEXT: Record<MoveError, string> = {
   ended: '对局已结束。',
@@ -145,7 +146,11 @@ export function gameReducer(state: FullState, action: Action): FullState {
 
     case 'UNDO': {
       if (state.history.length === 0) return state;
-      const prev = state.history[state.history.length - 1];
+      let n = 1;
+      if (action.untilColor) {
+        while (n < state.history.length && state.history[state.history.length - n].meta.next !== action.untilColor) n++;
+      }
+      const prev = state.history[state.history.length - n];
       return {
         ...state,
         gameState: prev.gameState,
@@ -156,7 +161,7 @@ export function gameReducer(state: FullState, action: Action): FullState {
         moveCount: prev.moveCount,
         info: '已悔棋。',
         infoIsError: false,
-        history: state.history.slice(0, -1),
+        history: state.history.slice(0, -n),
       };
     }
 
@@ -304,7 +309,10 @@ export function useGame(): UseGameReturn {
   const toggleNoRepeat = useCallback(() => dispatch({ type: 'TOGGLE_NO_REPEAT' }), []);
   const toggleAI = useCallback(() => dispatch({ type: 'TOGGLE_AI' }), []);
   const refreshBoards = useCallback(() => dispatch({ type: 'REFRESH_BOARDS' }), []);
-  const undo = useCallback(() => dispatch({ type: 'UNDO' }), []);
+  const undo = useCallback(
+    () => dispatch({ type: 'UNDO', untilColor: state.aiEnabled ? oppoColor(AI_COLOR) : undefined }),
+    [state.aiEnabled],
+  );
 
   // 监听编辑器保存事件，自动刷新棋盘列表
   useEffect(() => {
@@ -322,12 +330,16 @@ export function useGame(): UseGameReturn {
     if (!aiThinking) return;
     const timer = setTimeout(() => {
       const aiMove = pickAIMove(
-        board.adj, state.gameState, state.stoneStrings, AI_COLOR, board.p, DEFAULT_AI_CONFIG,
+        board.adj,
+        { gameState: state.gameState, stoneStrings: state.stoneStrings, meta: state.meta },
+        board.p,
+        state.noRepeat ? seenBoardHashes(state) : null,
+        DEFAULT_AI_CONFIG,
       );
       dispatch(aiMove != null ? { type: 'PLAY', nodeID: aiMove } : { type: 'PASS' });
     }, DEFAULT_AI_CONFIG.thinkMs);
     return () => clearTimeout(timer);
-  }, [aiThinking, board, state.gameState, state.stoneStrings]);
+  }, [aiThinking, board, state.gameState, state.stoneStrings, state.meta, state.history, state.noRepeat]);
 
   return {
     gameState: state.gameState,

@@ -77,6 +77,23 @@ test.describe('Goraph 冒烟测试', () => {
     expect(errors).toEqual([]);
   });
 
+  test('AI 对手自动应手，悔棋一次退回玩家回合', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(GAME_URL);
+    await page.getByText('设置', { exact: true }).click();
+    await page.locator('.toggle-row', { hasText: 'AI 对手' }).locator('.toggle').click();
+    await page.locator('.settings-close').click();
+    await tapBoard(page, 200, 200);
+    await expect(turn(page)).toHaveText('白');
+    await expect(turn(page)).toHaveText('黑', { timeout: 5000 });
+    await page.getByText('悔棋', { exact: true }).click();
+    await expect(turn(page)).toHaveText('黑');
+    // 玩家那一手也被撤销：同一点可以再下
+    await tapBoard(page, 200, 200);
+    await expect(turn(page)).toHaveText('白');
+    expect(errors).toEqual([]);
+  });
+
   test('编辑器页面', async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto(EDITOR_URL);

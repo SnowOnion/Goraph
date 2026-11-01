@@ -1,14 +1,13 @@
 /**
- * 围棋 AI 对手
- * 简单启发式：优先提子 > 靠近中心 > 随机
+ * 围棋 AI 对手：单步启发式
+ * 提子 > 救自己被叫吃的子 > 叫吃对方 > 靠近中心；不填自己的眼，避免自紧气；无好棋可下时虚手。
  */
 
-import { AdjacencyList, GameState, StoneColor, StoneStringsMap } from './types';
-import { validWrtRuleAndUpdate, initGameMeta } from './game-engine';
+import { AdjacencyList, PositionsMap, StoneColor } from './types';
+import { calculateScore, GamePosition, oppoColor, tryPlay } from './game-engine';
 
-/** AI 难度 */
 export interface AIConfig {
-  /** 难度：0=随机, 1=基础启发式, 2=贪心 */
+  /** 难度：0=随机（仍不填眼）, 1=启发式 */
   level: number;
   /** 思考延迟 (ms) */
   thinkMs: number;
@@ -19,136 +18,117 @@ export const DEFAULT_AI_CONFIG: AIConfig = {
   thinkMs: 500,
 };
 
-/**
- * 获取所有合法落子点
- */
-export function getValidMoves(
-  adj: AdjacencyList,
-  gameState: GameState,
-  stoneStrings: StoneStringsMap,
-  color: StoneColor,
-): number[] {
-  const moves: number[] = [];
-  for (const id in adj) {
-    const nodeID = parseInt(id);
-    if (gameState[nodeID].s !== 0) continue;
+/** 低于此分数的着法（自紧气送吃等）不如虚手 */
+const PASS_THRESHOLD = -10;
 
-    // 模拟落子
-    const testState = cloneGameState(gameState);
-    const testStrings = cloneStoneStrings(stoneStrings);
-    const testMeta = { ...initGameMeta(), next: color };
+function libertiesAt(position: GamePosition, nodeID: number): number {
+  const sid = position.gameState[nodeID].stoneStringID;
+  return position.stoneStrings[sid]?.chiSet.size ?? 0;
+}
 
-    const valid = validWrtRuleAndUpdate(adj, testState, testStrings, testMeta, nodeID, color);
-    if (valid) {
-      moves.push(nodeID);
-    }
+/** nodeID 是 color 的眼：所有邻点都是己方棋子（且邻点不全是同一个单气棋串的气，避免把「假眼送吃」当真眼） */
+export function isOwnEye(adj: AdjacencyList, position: GamePosition, nodeID: number, color: StoneColor): boolean {
+  const nbrs = adj[nodeID];
+  if (nbrs.length === 0) return false;
+  for (const n of nbrs) {
+    if (position.gameState[n].s !== color) return false;
   }
-  return moves;
+  return nbrs.every((n) => libertiesAt(position, n) > 1);
+}
+
+export interface ScoredMove {
+  nodeID: number;
+  score: number;
+}
+
+/** 列出当前行棋方所有合法（含禁止全同再现）且不填己眼的着法及其评分 */
+export function scoreMoves(
+  adj: AdjacencyList,
+  position: GamePosition,
+  positions: PositionsMap,
+  seenHashes: Set<string> | null,
+): ScoredMove[] {
+  const color = position.meta.next;
+  const oppo = oppoColor(color);
+  const capturedKey = color === 1 ? 'capturedByBlack' : 'capturedByWhite';
+  const result: ScoredMove[] = [];
+
+  for (const key in adj) {
+    const nodeID = Number(key);
+    if (position.gameState[nodeID].s !== 0) continue;
+    if (isOwnEye(adj, position, nodeID, color)) continue;
+
+    const r = tryPlay(adj, position, nodeID, seenHashes);
+    if ('error' in r) continue;
+    const after = r.position;
+
+    let score = 0;
+    const captured = after.meta[capturedKey] - position.meta[capturedKey];
+    score += captured * 10;
+
+    const myLibs = libertiesAt(after, nodeID);
+    if (captured === 0) {
+      if (myLibs === 1) score -= 30;
+      else if (myLibs === 2) score -= 2;
+    }
+
+    const seenOwn = new Set<number>();
+    const seenOppo = new Set<number>();
+    for (const n of adj[nodeID]) {
+      const before = position.gameState[n];
+      if (before.s === color && !seenOwn.has(before.stoneStringID)) {
+        seenOwn.add(before.stoneStringID);
+        const size = position.stoneStrings[before.stoneStringID].nodes.size;
+        if (libertiesAt(position, n) === 1 && myLibs >= 2) score += 8 * size;
+      }
+      const now = after.gameState[n];
+      if (now.s === oppo && !seenOppo.has(now.stoneStringID)) {
+        seenOppo.add(now.stoneStringID);
+        if (libertiesAt(after, n) === 1) score += 6;
+      }
+    }
+
+    const p = positions[nodeID];
+    if (p) {
+      const centerDist = Math.abs(p.x - 500) + Math.abs(p.y - 500);
+      score += Math.max(0, 3 - centerDist / 300);
+    }
+
+    result.push({ nodeID, score });
+  }
+  return result;
 }
 
 /**
- * 评估落子分数
- */
-function evaluateMove(
-  adj: AdjacencyList,
-  gameState: GameState,
-  nodeID: number,
-  color: StoneColor,
-  positions: Record<number, { x: number; y: number }>,
-): number {
-  let score = 0;
-
-  // 模拟落子看能否提掉对方棋子
-  const testState = cloneGameState(gameState);
-  const testStrings: StoneStringsMap = {};
-  const testMeta = { ...initGameMeta(), next: color };
-  const valid = validWrtRuleAndUpdate(adj, testState, testStrings, testMeta, nodeID, color);
-
-  if (!valid) return -1;
-
-  // 提子加分
-  for (const id in testState) {
-    if (gameState[parseInt(id)].s !== 0 && testState[parseInt(id)].s === 0) {
-      score += 10; // 提一个子加10分
-    }
-  }
-
-  // 靠近中心加分
-  if (positions[nodeID]) {
-    const px = positions[nodeID].x;
-    const py = positions[nodeID].y;
-    const centerDist = Math.abs(px - 500) + Math.abs(py - 500);
-    score += Math.max(0, 100 - centerDist / 5);
-  }
-
-  // 自己有气的加分
-  let hasEmptyNeighbor = false;
-  for (const nid of adj[nodeID]) {
-    if (gameState[nid]?.s === 0) {
-      hasEmptyNeighbor = true;
-      break;
-    }
-  }
-  if (hasEmptyNeighbor) score += 5;
-
-  return score;
-}
-
-/**
- * AI 选择最佳落子
+ * 为 position.meta.next 一方选一手；返回 null 表示虚手。
+ * 对方刚虚手且按数子法己方不落后时，也虚手以结束对局。
  */
 export function pickAIMove(
   adj: AdjacencyList,
-  gameState: GameState,
-  stoneStrings: StoneStringsMap,
-  color: StoneColor,
-  positions: Record<number, { x: number; y: number }>,
+  position: GamePosition,
+  positions: PositionsMap,
+  seenHashes: Set<string> | null = null,
   config: AIConfig = DEFAULT_AI_CONFIG,
+  random: () => number = Math.random,
 ): number | null {
-  const validMoves = getValidMoves(adj, gameState, stoneStrings, color);
-  if (validMoves.length === 0) return null;
+  const color = position.meta.next;
+  if (position.meta.passed > 0) {
+    const s = calculateScore(position.gameState, adj);
+    const lead = color === 1 ? s.black - s.white : s.white - s.black;
+    if (lead >= 0) return null;
+  }
+
+  const moves = scoreMoves(adj, position, positions, seenHashes);
+  if (moves.length === 0) return null;
 
   if (config.level === 0) {
-    // 完全随机
-    return validMoves[Math.floor(Math.random() * validMoves.length)];
+    return moves[Math.floor(random() * moves.length)].nodeID;
   }
 
-  // 启发式评分
-  let bestMove = validMoves[0];
-  let bestScore = -Infinity;
-
-  for (const move of validMoves) {
-    let score = evaluateMove(adj, gameState, move, color, positions);
-
-    // 加一点随机性避免重复
-    score += Math.random() * 2;
-
-    if (score > bestScore) {
-      bestScore = score;
-      bestMove = move;
-    }
+  let best: ScoredMove | null = null;
+  for (const m of moves) {
+    const s = m.score + random();
+    if (!best || s > best.score) best = { nodeID: m.nodeID, score: s };
   }
-
-  return bestMove;
-}
-
-// 辅助函数
-function cloneGameState(gs: GameState): GameState {
-  const result: GameState = {};
-  for (const id in gs) {
-    result[parseInt(id)] = { ...gs[parseInt(id)] };
-  }
-  return result;
-}
-
-function cloneStoneStrings(ss: StoneStringsMap): StoneStringsMap {
-  const result: StoneStringsMap = {};
-  for (const id in ss) {
-    const s = ss[id];
-    result[id] = {
-      chiSet: new Set(s.chiSet),
-      nodes: new Set(s.nodes),
-    };
-  }
-  return result;
+  return best && best.score > PASS_THRESHOLD ? best.nodeID : null;
 }
