@@ -20,9 +20,10 @@ if [ "$TARGET" = "h5" ]; then
   echo "📦 构建 H5..."
   npx taro build --type h5
 
-  # 复制 PWA 静态资源（Taro 不会自动复制 public/）
-  echo "📋 复制 PWA 资源 (manifest, service worker, 图标)..."
-  cp -r public/* dist/
+  # public/ 已由 Taro copy 配置复制；给 service worker 缓存打上版本号，部署新版后旧缓存会被清掉
+  SW_VERSION="$(git rev-parse --short HEAD 2>/dev/null || date +%s)"
+  sed -i.bak "s/__SW_VERSION__/${SW_VERSION}/g" dist/sw.js && rm -f dist/sw.js.bak
+  echo "🔖 Service Worker 缓存版本: ${SW_VERSION}"
 
   echo ""
   echo "✅ 构建完成: dist/"

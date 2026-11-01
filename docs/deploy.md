@@ -41,13 +41,12 @@ node test/measure.js   # 打印按钮/棋盘/文字的实际像素尺寸
 # 方式一：npm 脚本
 npm run build:h5
 
-# 方式二：部署脚本（推荐，会复制 PWA 资源）
+# 方式二：部署脚本（推荐，会给 Service Worker 缓存打版本号）
 ./scripts/deploy.sh h5
 ```
 
-> ⚠️ **重要**：Taro 3.x 在 H5 模式下**不会自动复制 `public/` 目录**。
-> 本项目通过 `scripts/deploy.sh` 在构建后手动执行 `cp -r public/* dist/`，
-> 以确保 `manifest.json`、`sw.js`、`icons/` 正确落到产物根目录。
+> `config/index.ts` 的 `copy.patterns` 会把 `public/`（`manifest.json`、`sw.js`、`icons/`）复制到产物根目录，两种方式都有 PWA 资源；
+> 区别是 `deploy.sh` 还会给 `sw.js` 的缓存打上版本号。
 
 ### 产物结构
 
@@ -63,7 +62,7 @@ dist/
 
 ### 部署到静态托管
 
-任选其一，把 `dist/` 作为站点根目录上传：
+产物里的资源、manifest、Service Worker 都用相对路径，`dist/` 既可以作为站点根目录，也可以放在任意子路径下（如 `https://app.sonion.xyz/goraph/`），无需改配置。任选其一上传：
 
 #### 1. GitHub Pages
 ```bash
@@ -101,7 +100,12 @@ server {
     try_files $uri $uri/ /index.html;
   }
 
-  # 静态资源长缓存
+  # Service Worker 不能长缓存，否则新版本迟迟不生效
+  location = /sw.js {
+    add_header Cache-Control "no-cache";
+  }
+
+  # 带 hash 的静态资源长缓存
   location ~* \.(js|css|svg|png)$ {
     expires 1y;
     add_header Cache-Control "public, immutable";
@@ -114,7 +118,8 @@ server {
 | 要求 | 说明 |
 |------|------|
 | **HTTPS** | Service Worker 仅在 HTTPS（或 localhost）下注册 |
-| **根路径** | `manifest.json` 与 `sw.js` 必须在站点根目录 |
+| **同目录** | `manifest.json`、`sw.js` 与 `index.html` 在同一目录（构建产物已如此）；SW 作用域即该目录 |
+| **缓存版本** | `scripts/deploy.sh` 把 `sw.js` 里的 `__SW_VERSION__` 替换为 git 提交号，新版激活时自动清理旧缓存；只跑 `npm run build:h5` 不替换 |
 | **独立模式** | `manifest.json` 中 `display: standalone` 已配置 |
 
 安装 PWA 后可在 `chrome://settings/installedApps` 或系统「已安装的应用」中管理。
@@ -183,7 +188,6 @@ jobs:
         with: { node-version: 20 }
       - run: npm ci
       - run: npm run build:h5
-      - run: cp -r public/* dist/   # 关键：复制 PWA 资源
       # 然后上传到你的托管平台
 ```
 

@@ -120,9 +120,9 @@ Taro 默认 `designWidth: 750`，会把 CSS 里的 `px` 转成 `vw`，导致 440
 **已修复**：`config/index.ts` 的 `h5.postcss.pxtransform.enable: false`。
 → 现在 1px = 真实 1px。改 UI 尺寸时按真实像素想。
 
-### 5.4 PWA 资源不会被自动复制
-Taro **不会**把 `public/` 复制到 `dist/`。必须执行 `cp -r public/* dist/`（`scripts/deploy.sh` 已包含）。
-否则 manifest / sw.js / 图标缺失，PWA 无法离线。
+### 5.4 PWA 资源与子路径部署
+Taro 默认不复制 `public/`，现由 `config/index.ts` 的 `copy.patterns` 复制到 `dist/`（复制时 JS 会被压缩，`sw.js` 里的版本号用占位符 `__SW_VERSION__`，由 `scripts/deploy.sh` 替换）。
+生产构建 `publicPath: './'`，`index.html`/`manifest.json`/`sw.js` 里也全是相对路径，产物可部署在任意子路径；dev server 用相对 publicPath 会白屏，所以开发时仍是 `/`。新增静态资源路径不要写成以 `/` 开头。
 
 ### 5.5 撤销/重做会丢 Canvas 事件监听
 重开一局时若 canvas DOM 被重建，旧监听器失效。

@@ -18,7 +18,8 @@ const config = {
     '@': path.resolve(__dirname, '..', 'src'),
   },
   copy: {
-    patterns: [],
+    // PWA 资源（manifest、service worker、图标）原样复制到产物根目录
+    patterns: [{ from: 'public/', to: 'dist/' }],
     options: {},
   },
   framework: 'react',
@@ -43,9 +44,10 @@ const config = {
     },
   },
   h5: {
-    publicPath: '/',
+    // 生产构建用相对路径，产物可部署在任意子路径（如 /goraph/）；路由是 hash 模式，页面 path 不变。
+    // dev server（--watch）用相对路径会白屏，保持 '/'。
+    publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
     staticDirectory: 'static',
-    staticPublicPath: '/',
     output: {
       filename: 'js/[name].[hash:8].js',
       chunkFilename: 'js/[name].[hash:8].chunk.js',
