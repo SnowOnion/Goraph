@@ -67,6 +67,23 @@ test.describe('Goraph 冒烟测试', () => {
     await expect(page.getByText(/数子法/)).toBeVisible();
   });
 
+  test('终局点死子后重新结算', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(GAME_URL);
+    await tapBoard(page, 200, 200);
+    await page.getByText('虚手', { exact: true }).click();
+    await page.getByText('虚手', { exact: true }).click();
+    await expect(page.getByText(/^黑棋胜/)).toBeVisible();
+    await page.getByText('点死子', { exact: true }).click();
+    await expect(page.locator('.info-bar')).toContainText('点棋子标记');
+    await tapBoard(page, 200, 200);
+    await expect(page.locator('.info-bar')).toContainText('黑 0 : 白 0');
+    await page.getByText('结算', { exact: true }).click();
+    await expect(page.getByText('和棋', { exact: true })).toBeVisible();
+    await expect(page.getByText(/死子：黑 1/)).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
   test('设置面板切换棋盘', async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto(GAME_URL);

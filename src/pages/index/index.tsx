@@ -37,10 +37,17 @@ export default function Index() {
     noRepeat, aiEnabled, capturedBlack, capturedWhite,
     canUndo,
     selectBoard, handlePlay, pass, restart, toggleFiveRule,
-    toggleNoRepeat, toggleAI, undo,
+    toggleNoRepeat, toggleAI, undo, dead, toggleDead,
   } = useGame();
 
-  const score = useMemo(() => (meta.ended ? calculateScore(gameState, adj) : null), [meta.ended, gameState, adj]);
+  const score = useMemo(
+    () => (meta.ended ? calculateScore(gameState, adj, 0, new Set(dead)) : null),
+    [meta.ended, gameState, adj, dead],
+  );
+  /** 终局后关闭结算弹窗、在棋盘上点死子 */
+  const [reviewing, setReviewing] = useState(false);
+  useEffect(() => { if (!meta.ended) setReviewing(false); }, [meta.ended]);
+  const showResult = useCallback(() => setReviewing(false), []);
 
   const triggerRestart = useCallback(() => {
     setGameId(id => id + 1);
@@ -76,7 +83,9 @@ export default function Index() {
           gameState={gameState}
           canvasWidth={canvasSize.width}
           canvasHeight={canvasSize.height}
-          onPlay={handlePlay}
+          onPlay={meta.ended ? toggleDead : handlePlay}
+          selectStones={meta.ended}
+          dead={dead}
           moveNumbers={moveNumbers}
           lastMove={lastMove}
           showMoveNumbers={showNumbers}
@@ -93,14 +102,25 @@ export default function Index() {
           <Text className="action-icon">↩️</Text>
           <Text className="action-label">悔棋</Text>
         </View>
-        <View
-          className={`action-btn primary ${meta.ended ? 'disabled' : ''}`}
-          onClick={meta.ended ? undefined : pass}
-          onTouchEnd={meta.ended ? undefined : (e) => { e.preventDefault(); pass(); }}
-        >
-          <Text className="action-icon">⏭️</Text>
-          <Text className="action-label">虚手</Text>
-        </View>
+        {meta.ended ? (
+          <View
+            className={`action-btn primary ${reviewing ? '' : 'disabled'}`}
+            onClick={reviewing ? showResult : undefined}
+            onTouchEnd={reviewing ? (e) => { e.preventDefault(); showResult(); } : undefined}
+          >
+            <Text className="action-icon">🏁</Text>
+            <Text className="action-label">结算</Text>
+          </View>
+        ) : (
+          <View
+            className="action-btn primary"
+            onClick={pass}
+            onTouchEnd={(e) => { e.preventDefault(); pass(); }}
+          >
+            <Text className="action-icon">⏭️</Text>
+            <Text className="action-label">虚手</Text>
+          </View>
+        )}
         <View
           className="action-btn"
           onClick={triggerRestart}
@@ -123,7 +143,11 @@ export default function Index() {
       <View
         className={`info-bar ${infoIsError ? 'error' : ''}`}
       >
-        <Text>{info && info.length > 1 ? info : '　'}</Text>
+        <Text>
+          {reviewing && score
+            ? `点棋子标记/取消死子 · 黑 ${score.black} : 白 ${score.white}`
+            : info && info.length > 1 ? info : '　'}
+        </Text>
       </View>
 
       {/* 设置面板 */}
@@ -201,8 +225,9 @@ export default function Index() {
 
       {/* 终局弹窗 */}
       <GameEndDialog
-        score={score}
+        score={reviewing ? null : score}
         onRestart={triggerRestart}
+        onReview={() => setReviewing(true)}
       />
     </View>
   );

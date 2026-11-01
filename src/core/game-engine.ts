@@ -36,6 +36,9 @@ export interface ScoreDetail {
   /** 不属于任何一方的空点（单官 / 公气） */
   neutral: number;
   komi: number;
+  /** 被标记为死子、计作对方提子的黑子 / 白子数 */
+  deadBlack: number;
+  deadWhite: number;
 }
 
 /**
@@ -43,8 +46,30 @@ export interface ScoreDetail {
  * 得分 = 盘上己方棋子数 + 只与己方棋子相邻的空域大小（白方另加贴目）。
  * 空域按连通块整体判定，与双方都相邻或不与任何棋子相邻的空域算中立。
  * 提子数不计入：数子法下提子已体现在盘面上。
+ * dead 中的节点视为已被提掉的死子（当作空点参与空域判定）。
  */
-export function calculateScore(gameState: GameState, adj: AdjacencyList, komi = 0): ScoreDetail {
+export function calculateScore(
+  gameState: GameState,
+  adj: AdjacencyList,
+  komi = 0,
+  dead: ReadonlySet<number> = new Set(),
+): ScoreDetail {
+  let deadBlack = 0;
+  let deadWhite = 0;
+  if (dead.size > 0) {
+    const eff: GameState = {};
+    for (const id in gameState) {
+      const n = parseInt(id);
+      const s = gameState[n].s;
+      if (s !== 0 && dead.has(n)) {
+        if (s === 1) deadBlack++; else deadWhite++;
+        eff[n] = { ...gameState[n], s: 0 };
+      } else {
+        eff[n] = gameState[n];
+      }
+    }
+    gameState = eff;
+  }
   let blackStones = 0;
   let whiteStones = 0;
   let blackTerritory = 0;
@@ -91,7 +116,27 @@ export function calculateScore(gameState: GameState, adj: AdjacencyList, komi = 
     whiteTerritory,
     neutral,
     komi,
+    deadBlack,
+    deadWhite,
   };
+}
+
+/** 与 nodeID 同色相连的整块棋子（终局点死子时整块切换） */
+export function connectedGroup(gameState: GameState, adj: AdjacencyList, nodeID: number): number[] {
+  const color = gameState[nodeID]?.s;
+  if (!color) return [];
+  const seen = new Set([nodeID]);
+  const stack = [nodeID];
+  while (stack.length) {
+    const n = stack.pop()!;
+    for (const m of adj[n] || []) {
+      if (!seen.has(m) && gameState[m].s === color) {
+        seen.add(m);
+        stack.push(m);
+      }
+    }
+  }
+  return [...seen];
 }
 
 export function cloneGameState(gs: GameState): GameState {

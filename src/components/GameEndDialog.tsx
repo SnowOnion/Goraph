@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { View } from '@tarojs/components';
 import { Text } from './Text';
 import { ScoreDetail } from '@/core/game-engine';
@@ -7,13 +6,12 @@ interface GameEndDialogProps {
   /** 终局计分；null 表示对局未结束 */
   score: ScoreDetail | null;
   onRestart: () => void;
+  /** 关闭弹窗回到棋盘点死子 */
+  onReview: () => void;
 }
 
-export function GameEndDialog({ score, onRestart }: GameEndDialogProps) {
-  const ended = score !== null;
-  const [dismissed, setDismissed] = useState(false);
-  useEffect(() => { if (!ended) setDismissed(false); }, [ended]);
-  if (!score || dismissed) return null;
+export function GameEndDialog({ score, onRestart, onReview }: GameEndDialogProps) {
+  if (!score) return null;
 
   const blackScore = score.black;
   const whiteScore = score.white;
@@ -76,6 +74,7 @@ export function GameEndDialog({ score, onRestart }: GameEndDialogProps) {
           {`\n黑 ${score.blackStones} 子 + ${score.blackTerritory} 空　白 ${score.whiteStones} 子 + ${score.whiteTerritory} 空`}
           {score.komi ? `　贴 ${score.komi}` : ''}
           {score.neutral ? `\n中立空点 ${score.neutral}` : ''}
+          {score.deadBlack || score.deadWhite ? `\n死子：黑 ${score.deadBlack}　白 ${score.deadWhite}` : ''}
         </Text>
 
         <View style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
@@ -94,7 +93,7 @@ export function GameEndDialog({ score, onRestart }: GameEndDialogProps) {
             <Text style={{ fontSize: 20, color: '#fff', fontWeight: '700' }}>再来一局</Text>
           </View>
           <View
-            onClick={() => setDismissed(true)}
+            onClick={onReview}
             style={{
               padding: '18px 36px', borderRadius: 18,
               backgroundColor: 'rgba(255,255,255,0.1)',
@@ -102,7 +101,7 @@ export function GameEndDialog({ score, onRestart }: GameEndDialogProps) {
               minWidth: 130,
             }}
           >
-            <Text style={{ fontSize: 20, color: '#ccc' }}>查看棋盘</Text>
+            <Text style={{ fontSize: 20, color: '#ccc' }}>点死子</Text>
           </View>
         </View>
       </View>
