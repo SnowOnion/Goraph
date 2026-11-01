@@ -30,14 +30,14 @@ export function GameEndDialog({ score, onRestart, onReview }: GameEndDialogProps
       <View style={{
         backgroundColor: '#14142e',
         borderRadius: 28,
-        padding: 36,
-        minWidth: 320,
-        maxWidth: '85vw',
+        padding: '30px 24px',
+        width: 'min(360px, 88vw)',
+        boxSizing: 'border-box',
         textAlign: 'center',
         boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
         pointerEvents: 'auto',
       }}>
-        <Text style={{ fontSize: 30, fontWeight: '800', color: '#fff', marginBottom: 22 }}>
+        <Text style={{ display: 'block', fontSize: 30, fontWeight: '800', color: '#fff', marginBottom: 22 }}>
           对局结束
         </Text>
 
@@ -49,8 +49,8 @@ export function GameEndDialog({ score, onRestart, onReview }: GameEndDialogProps
               margin: '0 auto 8px',
               border: '2px solid #444',
             }} />
-            <Text style={{ fontSize: 16, color: '#999' }}>黑</Text>
-            <Text style={{ fontSize: 42, fontWeight: '800', color: '#fff' }}>{blackScore}</Text>
+            <Text style={{ display: 'block', fontSize: 16, color: '#999' }}>黑</Text>
+            <Text style={{ display: 'block', fontSize: 42, fontWeight: '800', color: '#fff' }}>{blackScore}</Text>
           </View>
           <Text style={{ fontSize: 28, color: '#555', alignSelf: 'center' }}>:</Text>
           <View style={{ textAlign: 'center' }}>
@@ -60,16 +60,16 @@ export function GameEndDialog({ score, onRestart, onReview }: GameEndDialogProps
               margin: '0 auto 8px',
               border: '2px solid #aaa',
             }} />
-            <Text style={{ fontSize: 16, color: '#999' }}>白</Text>
-            <Text style={{ fontSize: 42, fontWeight: '800', color: '#fff' }}>{whiteScore}</Text>
+            <Text style={{ display: 'block', fontSize: 16, color: '#999' }}>白</Text>
+            <Text style={{ display: 'block', fontSize: 42, fontWeight: '800', color: '#fff' }}>{whiteScore}</Text>
           </View>
         </View>
 
-        <Text style={{ fontSize: 24, fontWeight: '700', color: '#ff6b6b', marginBottom: 26 }}>
+        <Text style={{ display: 'block', fontSize: 24, fontWeight: '700', color: '#ff6b6b', marginBottom: 14 }}>
           {winner === '和棋' ? '和棋' : `${winner}胜 ${Math.abs(diff)} 点`}
         </Text>
 
-        <Text style={{ fontSize: 14, color: '#888', marginBottom: 22, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+        <Text style={{ display: 'block', fontSize: 14, color: '#888', marginBottom: 22, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
           {`数子法：子 + 只与己方相邻的空域`}
           {`\n黑 ${score.blackStones} 子 + ${score.blackTerritory} 空　白 ${score.whiteStones} 子 + ${score.whiteTerritory} 空`}
           {score.komi ? `　贴 ${score.komi}` : ''}
@@ -77,16 +77,15 @@ export function GameEndDialog({ score, onRestart, onReview }: GameEndDialogProps
           {score.deadBlack || score.deadWhite ? `\n死子：黑 ${score.deadBlack}　白 ${score.deadWhite}` : ''}
         </Text>
 
-        <View style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+        <View style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           <View
             onClick={onRestart}
             onTouchEnd={(e: any) => { e.preventDefault(); onRestart(); }}
             style={{
-              padding: '18px 36px', borderRadius: 18,
+              flex: 1, padding: '16px 0', borderRadius: 18,
               background: 'linear-gradient(135deg, #ff6b6b 0%, #c0392b 100%)',
               cursor: 'pointer',
               boxShadow: '0 6px 20px rgba(255, 107, 107, 0.4)',
-              minWidth: 130,
               touchAction: 'manipulation',
             }}
           >
@@ -95,10 +94,9 @@ export function GameEndDialog({ score, onRestart, onReview }: GameEndDialogProps
           <View
             onClick={onReview}
             style={{
-              padding: '18px 36px', borderRadius: 18,
+              flex: 1, padding: '16px 0', borderRadius: 18,
               backgroundColor: 'rgba(255,255,255,0.1)',
               cursor: 'pointer',
-              minWidth: 130,
             }}
           >
             <Text style={{ fontSize: 20, color: '#ccc' }}>点死子</Text>

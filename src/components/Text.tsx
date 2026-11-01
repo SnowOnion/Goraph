@@ -16,7 +16,7 @@ interface TextProps {
 export function Text({ children, style, className, onClick }: TextProps) {
   return (
     <span
-      style={{ ...style, display: 'inline' }}
+      style={{ display: 'inline', ...style }}
       className={className}
       onClick={onClick}
     >
