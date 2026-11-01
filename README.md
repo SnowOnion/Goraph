@@ -9,15 +9,15 @@ Goraph := Game of **Go** on any [g**raph**](https://en.wikipedia.org/wiki/Graph_
 
 # Play
 
-+ Choose 1 way out of the two:
-    + Online: [https://app.sonion.xyz/goraph/](https://app.sonion.xyz/goraph/)
-    + Offline: Use any HTTP server to serve this directory as static files, e.g. 
-        + Python 2: `python -m SimpleHTTPServer`
-        + Python 3: `python3 -m http.server`
++ Online（2018 旧版）: [https://app.sonion.xyz/goraph/](https://app.sonion.xyz/goraph/)
++ 本地运行新版（Taro + React + TS）：`npm install && npm run dev:h5` → http://localhost:10086
++ 本地运行旧版：`python3 -m http.server --directory legacy`
+
+构建 / 部署见 [docs/deploy.md](docs/deploy.md)；接手开发先读 [docs/HANDOVER.md](docs/HANDOVER.md)。
 
 # TODO
 
-（see also [version history](doc/log.md)）
+（see also [version history](docs/log.md)）
 
 ## Features
 

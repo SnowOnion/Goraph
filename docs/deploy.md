@@ -189,6 +189,41 @@ jobs:
 
 ---
 
+## 六、旧版（2018 vanilla JS）
+
+`legacy/` 是 2018 年的原始实现：纯静态页，无构建步骤，ES module 直接在浏览器里跑。
+
+```
+legacy/
+├── index.html      # 入口（含 Disqus 评论区）
+├── favicon.ico
+└── script/         # index.js / boards.js / five.js
+```
+
+把 **`legacy/` 目录本身** 作为站点根目录即可（`index.html` 用相对路径 `script/index.js` 引用脚本，放在任意子路径下都能用）：
+
+```bash
+# 本地预览
+python3 -m http.server 8000 --directory legacy   # → http://localhost:8000
+
+# 部署到服务器子路径，例如 https://app.sonion.xyz/goraph/
+rsync -av --delete legacy/ user@server:/var/www/goraph/
+```
+
+Nginx 只需普通静态站配置：
+
+```nginx
+location /goraph/ {
+  alias /var/www/goraph/;
+  index index.html;
+}
+```
+
+> ES module 脚本必须经 HTTP(S) 加载，直接双击打开 `file://` 不行。
+> 旧版与新版不要部署到同一目录：新版 `dist/` 根目录也有 `index.html`，会互相覆盖。
+
+---
+
 ## 常见问题
 
 **Q: 部署后 PWA 无法离线使用？**
