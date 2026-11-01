@@ -68,8 +68,8 @@ Goraph/
 ├── smoke.spec.ts              H5 冒烟测试（Playwright）
 ├── test/measure.js            打印 UI 元素实际像素尺寸
 ├── docs/                      文档（deploy.md / regression-tests.md / …）
-├── legacy/                    旧版 vanilla JS 源码（备份）
-└── doc/                       更早期的调研笔记
+├── legacy/                    2018 旧版 vanilla JS（可直接静态部署，见 deploy.md §六）
+└── .agents/skills/            给 AI 编码助手的项目 skill
 ```
 
 ---
@@ -197,8 +197,8 @@ Taro **不会**把 `public/` 复制到 `dist/`。必须执行 `cp -r public/* di
 | `docs/branch-strategy.md` | Git 分支规范 |
 | `docs/refactor-plan.md` | 原始重构计划 |
 | `docs/progress-2026-10-13.md` | 迭代进度记录 |
-| `legacy/` | 旧版源码（参考/考古） |
-| `doc/` | 早期调研笔记（chi.txt/mess.txt/log.md） |
+| `legacy/` | 旧版源码，可直接静态部署（deploy.md §六） |
+| `docs/chi.txt` `docs/mess.txt` `docs/log.md` | 2018 年的调研笔记 / 版本记录 |
 
 ---
 
