@@ -4,7 +4,7 @@
  */
 
 import { AdjacencyList, GameState, StoneColor, StoneStringsMap } from './types';
-import { validWrtRuleAndUpdate } from './game-engine';
+import { validWrtRuleAndUpdate, initGameMeta } from './game-engine';
 
 /** AI 难度 */
 export interface AIConfig {
@@ -36,7 +36,7 @@ export function getValidMoves(
     // 模拟落子
     const testState = cloneGameState(gameState);
     const testStrings = cloneStoneStrings(stoneStrings);
-    const testMeta = { next: color, passed: 0, ended: false, _nextStoneStringID: 0 };
+    const testMeta = { ...initGameMeta(), next: color };
 
     const valid = validWrtRuleAndUpdate(adj, testState, testStrings, testMeta, nodeID, color);
     if (valid) {
@@ -61,7 +61,7 @@ function evaluateMove(
   // 模拟落子看能否提掉对方棋子
   const testState = cloneGameState(gameState);
   const testStrings: StoneStringsMap = {};
-  const testMeta = { next: color, passed: 0, ended: false, _nextStoneStringID: 0 };
+  const testMeta = { ...initGameMeta(), next: color };
   const valid = validWrtRuleAndUpdate(adj, testState, testStrings, testMeta, nodeID, color);
 
   if (!valid) return -1;

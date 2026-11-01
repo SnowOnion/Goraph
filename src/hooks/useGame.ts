@@ -11,7 +11,6 @@ import { Board } from '@/core/types';
 import {
   GameMeta,
   initGameState,
-  initGameStrings,
   initGameMeta,
   validWrtRuleAndUpdate,
   flip as flipColor,
@@ -283,6 +282,9 @@ export interface UseGameReturn {
   moveNumbers: Record<number, number>;
   lastMove: number | null;
   canUndo: boolean;
+  moveCount: number;
+  capturedBlack: number;
+  capturedWhite: number;
   noRepeat: boolean;
   aiEnabled: boolean;
   aiThinking: boolean;
@@ -363,6 +365,9 @@ export function useGame(): UseGameReturn {
     moveNumbers: state.moveNumbers,
     lastMove: state.lastMove,
     canUndo: state.history.length > 0 && !state.meta.ended,
+    moveCount: state.moveCount,
+    capturedBlack: state.meta.capturedByBlack,
+    capturedWhite: state.meta.capturedByWhite,
     noRepeat: state.noRepeat,
     aiEnabled: state.aiEnabled,
     aiThinking: state.aiThinking,

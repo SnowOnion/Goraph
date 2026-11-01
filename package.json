@@ -9,9 +9,11 @@
     "dev:weapp": "taro build --type weapp --watch",
     "build:weapp": "taro build --type weapp",
     "build:all": "npm run build:h5 && npm run build:weapp",
-    "test": "npx playwright test",
-    "test:headed": "npx playwright test --headed",
-    "test:debug": "npx playwright test --debug"
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@tarojs/components": "3.6.35",
@@ -41,6 +43,7 @@
     "react-test-renderer": "^18.2.0",
     "tslib": "^2.6.0",
     "typescript": "^5.3.0",
+    "vitest": "^2.1.9",
     "webpack": "5.78.0"
   },
   "overrides": {

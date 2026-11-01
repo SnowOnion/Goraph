@@ -1,10 +1,9 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { View } from '@tarojs/components';
 import { AdjacencyList, PositionsMap } from '@/core/types';
-import { EditorState } from '@/core/editor';
+import { EditorState, EditorTool } from '@/core/editor';
 
-/** 编辑器工具类型 */
-export type EditorTool = 'select' | 'addNode' | 'addEdge' | 'delete';
+export type { EditorTool } from '@/core/editor';
 
 interface EditorCanvasProps {
   editorState: EditorState;
