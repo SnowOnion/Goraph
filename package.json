@@ -21,7 +21,7 @@
     "@tarojs/plugin-framework-react": "3.6.35",
     "@tarojs/plugin-platform-h5": "3.6.35",
     "@tarojs/plugin-platform-weapp": "3.6.35",
-    "@tarojs/react": "^4.3.0",
+    "@tarojs/react": "3.6.35",
     "@tarojs/runtime": "3.6.35",
     "@tarojs/shared": "3.6.35",
     "@tarojs/taro": "3.6.35",
