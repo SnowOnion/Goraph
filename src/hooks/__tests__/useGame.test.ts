@@ -88,3 +88,29 @@ describe('与 AI 对局时悔棋', () => {
     expect(s.meta.next).toBe(1);
   });
 });
+
+describe('终局点死子', () => {
+  const ended = () => run([play(0), play(1), play(4), { type: 'PASS' }, { type: 'PASS' }]);
+
+  it('对局未结束时忽略', () => {
+    const s = run([play(0)]);
+    expect(run([{ type: 'TOGGLE_DEAD', nodeID: 0 }], s)).toBe(s);
+  });
+
+  it('整块切换，再点一次取消', () => {
+    let s = ended();
+    expect(s.meta.ended).toBe(true);
+    s = run([{ type: 'TOGGLE_DEAD', nodeID: 4 }], s);
+    expect([...s.dead].sort()).toEqual([0, 4]);
+    s = run([{ type: 'TOGGLE_DEAD', nodeID: 0 }], s);
+    expect(s.dead).toEqual([]);
+  });
+
+  it('点空点无效；悔棋清空死子标记', () => {
+    let s = ended();
+    expect(run([{ type: 'TOGGLE_DEAD', nodeID: 15 }], s)).toBe(s);
+    s = run([{ type: 'TOGGLE_DEAD', nodeID: 1 }, { type: 'UNDO' }], s);
+    expect(s.dead).toEqual([]);
+    expect(s.meta.ended).toBe(false);
+  });
+});

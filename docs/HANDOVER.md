@@ -127,6 +127,7 @@ Taro 默认不复制 `public/`，现由 `config/index.ts` 的 `copy.patterns` �
 ### 5.5 撤销/重做会丢 Canvas 事件监听
 重开一局时若 canvas DOM 被重建，旧监听器失效。
 **解决**：`BoardCanvas` 用 `key={gameId}` 强制 React 重建元素，从而触发 callback ref 重新绑定。
+另外 callback ref 本身变化（依赖变了）时会对同一个 canvas 再绑一遍：现在先 `detachRef.current()` 解绑旧监听器，`onPlay` 走 `onPlayRef`，所以换回调（如终局切到点死子）不会被旧监听器抢先处理。
 
 ---
 

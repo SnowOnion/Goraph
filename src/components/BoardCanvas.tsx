@@ -11,12 +11,16 @@ interface BoardCanvasProps {
   moveNumbers?: Record<number, number>;
   lastMove?: number | null;
   showMoveNumbers?: boolean;
+  /** true 时点选的是棋子（终局点死子），否则是空点（落子） */
+  selectStones?: boolean;
+  /** 标记为死子的节点：半透明并打叉 */
+  dead?: number[];
 }
 
 const BOARD_COORDS_SIZE = 1000;
 
 export function BoardCanvas(props: BoardCanvasProps) {
-  const { adj, positions, gameState, canvasWidth, canvasHeight, onPlay, moveNumbers, lastMove, showMoveNumbers = true } = props;
+  const { adj, positions, gameState, canvasWidth, canvasHeight, onPlay, moveNumbers, lastMove, showMoveNumbers = true, selectStones = false, dead } = props;
 
   const cRef = useRef<HTMLCanvasElement>(null);
   const dprRef = useRef(1);
@@ -36,6 +40,17 @@ export function BoardCanvas(props: BoardCanvasProps) {
   mnsRef.current = moveNumbers;
   lmRef.current = lastMove;
   snRef.current = showMoveNumbers;
+  const onPlayRef = useRef(onPlay);
+  onPlayRef.current = onPlay;
+  /** 解绑上一次挂在 canvas 上的原生事件，避免回调更新后旧监听器残留 */
+  const detachRef = useRef<(() => void) | null>(null);
+  const selRef = useRef(selectStones);
+  selRef.current = selectStones;
+  const deadRef = useRef(new Set(dead));
+  deadRef.current = new Set(dead);
+  /** 当前模式下 nodeID 是否可点 */
+  const selectable = (n: number | null) =>
+    n != null && gsRef.current[n] != null && (selRef.current ? gsRef.current[n].s !== 0 : gsRef.current[n].s === 0);
 
   const paint = () => {
     const gs = gsRef.current;
@@ -87,6 +102,8 @@ export function BoardCanvas(props: BoardCanvasProps) {
       if (gs[n].s === 0) continue;
       const p = pos[n];
       const black = gs[n].s === 1;
+      const isDead = deadRef.current.has(n);
+      ctx.globalAlpha = isDead ? 0.35 : 1;
 
       ctx.shadowColor = 'rgba(0,0,0,0.3)';
       ctx.shadowBlur = 4;
@@ -101,6 +118,20 @@ export function BoardCanvas(props: BoardCanvasProps) {
       ctx.beginPath();
       ctx.arc(p.x * scale, p.y * scale, r, 0, Math.PI * 2);
       ctx.stroke();
+
+      if (isDead) {
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#e53935';
+        ctx.lineWidth = Math.max(2, r * 0.15);
+        const d = r * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(p.x * scale - d, p.y * scale - d);
+        ctx.lineTo(p.x * scale + d, p.y * scale + d);
+        ctx.moveTo(p.x * scale + d, p.y * scale - d);
+        ctx.lineTo(p.x * scale - d, p.y * scale + d);
+        ctx.stroke();
+        continue;
+      }
 
       if (lmRef.current === n) {
         ctx.strokeStyle = '#ff5722';
@@ -119,13 +150,20 @@ export function BoardCanvas(props: BoardCanvasProps) {
       }
     }
 
+    ctx.globalAlpha = 1;
     const pid = preview.current;
-    if (pid != null && gs[pid]?.s === 0) {
-      const p = pos[pid];
-      ctx.fillStyle = 'rgba(76,175,80,0.4)';
+    if (selectable(pid)) {
+      const p = pos[pid!];
       ctx.beginPath();
       ctx.arc(p.x * scale, p.y * scale, r + 2, 0, Math.PI * 2);
-      ctx.fill();
+      if (selRef.current) {
+        ctx.strokeStyle = '#e53935';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = 'rgba(76,175,80,0.4)';
+        ctx.fill();
+      }
     }
 
     ctx.restore();
@@ -141,7 +179,6 @@ export function BoardCanvas(props: BoardCanvasProps) {
 
   const doPreview = useCallback((cx: number, cy: number) => {
     const pos = posRef.current;
-    const gs = gsRef.current;
     const c = cRef.current;
     if (!c) return;
     const rect = c.getBoundingClientRect();
@@ -169,8 +206,8 @@ export function BoardCanvas(props: BoardCanvasProps) {
       if (d < bestD) { bestD = d; bestId = parseInt(k); }
     }
 
-    // 吸附到最近空节点
-    if (bestId >= 0 && gs[bestId]?.s === 0) {
+    // 吸附到最近的可点节点（落子时为空点，点死子时为棋子）
+    if (bestId >= 0 && selectable(bestId)) {
       if (preview.current !== bestId) {
         preview.current = bestId;
         paint();
@@ -182,18 +219,17 @@ export function BoardCanvas(props: BoardCanvasProps) {
   }, []);
 
   const doPlay = useCallback((clientX?: number, clientY?: number) => {
-    const gs = gsRef.current;
     const nid = preview.current;
     pressing.current = false;
     preview.current = null;
     paint();
     // 只有在棋盘范围内松开才落子
-    if (nid != null && gs[nid]?.s === 0) {
+    if (selectable(nid)) {
       if (clientX !== undefined && clientY !== undefined && isInside(clientX, clientY)) {
-        onPlay(nid);
+        onPlayRef.current(nid!);
       }
     }
-  }, [onPlay, isInside]);
+  }, [isInside]);
 
   // 用 callback ref 确保每次 canvas 创建/重新创建都绑定事件
   const canvasRef = useCallback((node: HTMLCanvasElement | null) => {
@@ -215,6 +251,7 @@ export function BoardCanvas(props: BoardCanvasProps) {
     const onTm = (e: TouchEvent) => { e.preventDefault(); if (pressing.current) { const t = e.touches[0]; if (t) doPreview(t.clientX, t.clientY); } };
     const onTe = (e: TouchEvent) => { e.preventDefault(); if (pressing.current) { const t = e.changedTouches[0]; doPlay(t?.clientX, t?.clientY); } };
 
+    detachRef.current?.();
     node.addEventListener('mousedown', onMd);
     node.addEventListener('mousemove', onMm);
     node.addEventListener('mouseup', onMu);
@@ -222,10 +259,19 @@ export function BoardCanvas(props: BoardCanvasProps) {
     node.addEventListener('touchstart', onTs, { passive: false });
     node.addEventListener('touchmove', onTm, { passive: false });
     node.addEventListener('touchend', onTe, { passive: false });
+    detachRef.current = () => {
+      node.removeEventListener('mousedown', onMd);
+      node.removeEventListener('mousemove', onMm);
+      node.removeEventListener('mouseup', onMu);
+      node.removeEventListener('mouseleave', onMl);
+      node.removeEventListener('touchstart', onTs);
+      node.removeEventListener('touchmove', onTm);
+      node.removeEventListener('touchend', onTe);
+    };
   }, [canvasWidth, canvasHeight, doPreview, doPlay]);
 
   // 状态变化时重绘
-  useEffect(() => { paint(); }, [gameState, adj, positions, moveNumbers, lastMove, showMoveNumbers]);
+  useEffect(() => { paint(); }, [gameState, adj, positions, moveNumbers, lastMove, showMoveNumbers, selectStones, dead]);
 
   return (
     <canvas

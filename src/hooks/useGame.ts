@@ -15,6 +15,7 @@ import {
   initGameMeta,
   executePass,
   oppoColor,
+  connectedGroup,
   initStoneStrings,
   boardHash,
   tryPlay,
@@ -50,6 +51,8 @@ interface FullState {
   noRepeat: boolean;
   /** 是否启用 AI 对手 */
   aiEnabled: boolean;
+  /** 终局后标记的死子节点 */
+  dead: number[];
 }
 
 interface HistoryEntry {
@@ -73,6 +76,8 @@ type Action =
   | { type: 'TOGGLE_NO_REPEAT' }
   | { type: 'TOGGLE_AI' }
   | { type: 'REFRESH_BOARDS' }
+  /** 终局后切换 nodeID 所在整块棋子的死活标记 */
+  | { type: 'TOGGLE_DEAD'; nodeID: number }
   /** untilColor：一直悔到轮到该方为止（与 AI 对局时悔到玩家回合） */
   | { type: 'UNDO'; untilColor?: StoneColor };
 
@@ -128,6 +133,7 @@ function createInitialState(
     moveNumbers: {},
     lastMove: null,
     moveCount: 0,
+    dead: [],
     ...prefs,
   };
 }
@@ -161,6 +167,7 @@ export function gameReducer(state: FullState, action: Action): FullState {
         moveCount: prev.moveCount,
         info: '已悔棋。',
         infoIsError: false,
+        dead: [],
         history: state.history.slice(0, -n),
       };
     }
@@ -191,6 +198,18 @@ export function gameReducer(state: FullState, action: Action): FullState {
 
     case 'TOGGLE_AI':
       return { ...state, aiEnabled: !state.aiEnabled };
+
+    case 'TOGGLE_DEAD': {
+      if (!state.meta.ended) return state;
+      const group = connectedGroup(state.gameState, currentBoard(state).adj, action.nodeID);
+      if (group.length === 0) return state;
+      const dead = new Set(state.dead);
+      const makeDead = !dead.has(action.nodeID);
+      for (const n of group) {
+        if (makeDead) dead.add(n); else dead.delete(n);
+      }
+      return { ...state, dead: [...dead] };
+    }
 
     case 'REFRESH_BOARDS': {
       const allBoards = getAllBoards();
@@ -287,6 +306,9 @@ export interface UseGameReturn {
   toggleAI: () => void;
   refreshBoards: () => void;
   undo: () => void;
+  /** 终局后标记的死子 */
+  dead: number[];
+  toggleDead: (nodeID: number) => void;
 }
 
 const AI_COLOR: StoneColor = 2;
@@ -309,6 +331,7 @@ export function useGame(): UseGameReturn {
   const toggleNoRepeat = useCallback(() => dispatch({ type: 'TOGGLE_NO_REPEAT' }), []);
   const toggleAI = useCallback(() => dispatch({ type: 'TOGGLE_AI' }), []);
   const refreshBoards = useCallback(() => dispatch({ type: 'REFRESH_BOARDS' }), []);
+  const toggleDead = useCallback((nodeID: number) => dispatch({ type: 'TOGGLE_DEAD', nodeID }), []);
   const undo = useCallback(
     () => dispatch({ type: 'UNDO', untilColor: state.aiEnabled ? oppoColor(AI_COLOR) : undefined }),
     [state.aiEnabled],
@@ -371,6 +394,8 @@ export function useGame(): UseGameReturn {
     toggleAI,
     refreshBoards,
     undo,
+    dead: state.dead,
+    toggleDead,
   };
 }
 
