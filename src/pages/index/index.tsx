@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { View } from '@tarojs/components';
 import { Text } from '@/components/Text';
 import { GameEndDialog } from '@/components/GameEndDialog';
@@ -32,13 +32,15 @@ export default function Index() {
   }, [calcCanvasSize]);
 
   const {
-    gameState, meta, adj, positions, boardIndex, allBoards, info,
-    isRectangular, hasFiveRule, moveNumbers, lastMove, moveCount,
-    noRepeat, aiEnabled, aiThinking, capturedBlack, capturedWhite,
+    gameState, meta, adj, positions, boardIndex, allBoards, info, infoIsError,
+    isRectangular, hasFiveRule, moveNumbers, lastMove,
+    noRepeat, aiEnabled, capturedBlack, capturedWhite,
     canUndo,
     selectBoard, handlePlay, pass, restart, toggleFiveRule,
     toggleNoRepeat, toggleAI, undo,
   } = useGame();
+
+  const score = useMemo(() => (meta.ended ? calculateScore(gameState, adj) : null), [meta.ended, gameState, adj]);
 
   const triggerRestart = useCallback(() => {
     setGameId(id => id + 1);
@@ -84,9 +86,9 @@ export default function Index() {
       {/* 操作栏 */}
       <View className="action-bar">
         <View
-          className={`action-btn ${(!canUndo || meta.ended) ? 'disabled' : ''}`}
-          onClick={(!canUndo || meta.ended) ? undefined : undo}
-          onTouchEnd={(!canUndo || meta.ended) ? undefined : (e) => { e.preventDefault(); undo(); }}
+          className={`action-btn ${!canUndo ? 'disabled' : ''}`}
+          onClick={!canUndo ? undefined : undo}
+          onTouchEnd={!canUndo ? undefined : (e) => { e.preventDefault(); undo(); }}
         >
           <Text className="action-icon">↩️</Text>
           <Text className="action-label">悔棋</Text>
@@ -119,7 +121,7 @@ export default function Index() {
 
       {/* 信息提示 —— 始终占据固定高度，防止棋盘跳动 */}
       <View
-        className={`info-bar ${info.includes('不合') || info.includes('禁止') ? 'error' : ''}`}
+        className={`info-bar ${infoIsError ? 'error' : ''}`}
       >
         <Text>{info && info.length > 1 ? info : '　'}</Text>
       </View>
@@ -199,11 +201,8 @@ export default function Index() {
 
       {/* 终局弹窗 */}
       <GameEndDialog
-        ended={meta.ended}
-        blackScore={calculateScore(gameState, adj, meta).black}
-        whiteScore={calculateScore(gameState, adj, meta).white}
+        score={score}
         onRestart={triggerRestart}
-        onContinue={() => {}}
       />
     </View>
   );

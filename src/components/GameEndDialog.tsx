@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { View } from '@tarojs/components';
 import { Text } from './Text';
+import { ScoreDetail } from '@/core/game-engine';
 
 interface GameEndDialogProps {
-  ended: boolean;
-  blackScore: number;
-  whiteScore: number;
+  /** 终局计分；null 表示对局未结束 */
+  score: ScoreDetail | null;
   onRestart: () => void;
-  onContinue: () => void;
 }
 
-export function GameEndDialog({ ended, blackScore, whiteScore, onRestart, onContinue }: GameEndDialogProps) {
+export function GameEndDialog({ score, onRestart }: GameEndDialogProps) {
+  const ended = score !== null;
   const [dismissed, setDismissed] = useState(false);
   useEffect(() => { if (!ended) setDismissed(false); }, [ended]);
-  if (!ended || dismissed) return null;
+  if (!score || dismissed) return null;
+
+  const blackScore = score.black;
+  const whiteScore = score.white;
 
   const diff = blackScore - whiteScore;
   const winner = diff > 0 ? '黑棋' : diff < 0 ? '白棋' : '和棋';
@@ -65,7 +68,14 @@ export function GameEndDialog({ ended, blackScore, whiteScore, onRestart, onCont
         </View>
 
         <Text style={{ fontSize: 24, fontWeight: '700', color: '#ff6b6b', marginBottom: 26 }}>
-          {winner === '和棋' ? '和棋' : `${winner} 胜 ${Math.abs(diff)} 目`}
+          {winner === '和棋' ? '和棋' : `${winner}胜 ${Math.abs(diff)} 点`}
+        </Text>
+
+        <Text style={{ fontSize: 14, color: '#888', marginBottom: 22, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
+          {`数子法：子 + 只与己方相邻的空域`}
+          {`\n黑 ${score.blackStones} 子 + ${score.blackTerritory} 空　白 ${score.whiteStones} 子 + ${score.whiteTerritory} 空`}
+          {score.komi ? `　贴 ${score.komi}` : ''}
+          {score.neutral ? `\n中立空点 ${score.neutral}` : ''}
         </Text>
 
         <View style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>

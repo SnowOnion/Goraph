@@ -1,7 +1,7 @@
 /**
  * 游戏状态管理 Hook
  * 使用 useReducer 保证 gameState / stoneStrings / meta 的原子更新
- * 支持预设棋盘 + 自定义棋盘 + 悔棋 + 棋子序号
+ * 支持预设棋盘 + 自定义棋盘 + 悔棋 + 棋子序号 + 禁止全同再现
  */
 
 import { useReducer, useCallback, useEffect } from 'react';
@@ -10,18 +10,18 @@ import { BOARDS, DEFAULT_BOARD_INDEX, getAllBoards } from '@/core/boards';
 import { Board } from '@/core/types';
 import {
   GameMeta,
+  MoveError,
   initGameState,
   initGameMeta,
-  validWrtRuleAndUpdate,
-  flip as flipColor,
   executePass,
   oppoColor,
   initStoneStrings,
   boardHash,
+  tryPlay,
 } from '@/core/game-engine';
 import { checkFiveWinning } from '@/core/five';
-import { pickAIMove, AIConfig, DEFAULT_AI_CONFIG } from '@/core/ai';
-import { AdjacencyList, PositionsMap, GameState, StoneStringsMap } from '@/core/types';
+import { pickAIMove, DEFAULT_AI_CONFIG } from '@/core/ai';
+import { AdjacencyList, PositionsMap, GameState, StoneStringsMap, StoneColor } from '@/core/types';
 
 /* ------------------------------------------------------------------ */
 /*  Reducer                                                           */
@@ -33,25 +33,23 @@ interface FullState {
   stoneStrings: StoneStringsMap;
   meta: GameMeta;
   info: string;
+  /** info 是否为错误提示（落子被拒） */
+  infoIsError: boolean;
   hasFiveRule: boolean;
   /** 所有可用棋盘（预设 + 自定义） */
   allBoards: Board[];
-  /** 悔棋历史栈 */
+  /** 悔棋历史栈：每一手之前的局面 */
   history: HistoryEntry[];
   /** 节点ID -> 落子手数（用于显示序号） */
   moveNumbers: Record<number, number>;
   /** 最后一手位置 */
   lastMove: number | null;
-  /** 总手数 */
+  /** 总手数（含虚手） */
   moveCount: number;
-  /** 已出现的棋盘哈希集合（禁止全同再现） */
-  boardHashes: Set<string>;
   /** 是否启用禁止全同再现规则 */
   noRepeat: boolean;
   /** 是否启用 AI 对手 */
   aiEnabled: boolean;
-  /** AI 思考中 */
-  aiThinking: boolean;
 }
 
 interface HistoryEntry {
@@ -62,6 +60,8 @@ interface HistoryEntry {
   lastMove: number | null;
   moveCount: number;
   info: string;
+  /** 该局面的盘面哈希（用于禁止全同再现） */
+  hash: string;
 }
 
 type Action =
@@ -75,74 +75,73 @@ type Action =
   | { type: 'REFRESH_BOARDS' }
   | { type: 'UNDO' };
 
-function cloneGameState(gs: GameState): GameState {
-  const result: GameState = {};
-  for (const id in gs) {
-    result[parseInt(id)] = { ...gs[parseInt(id)] };
-  }
-  return result;
-}
+const MOVE_ERROR_TEXT: Record<MoveError, string> = {
+  ended: '对局已结束。',
+  occupied: '这里已经有子了。',
+  suicide: '不能自杀：落子后无气，也提不掉对方的子。',
+  superko: '禁止全同再现：这一手会让盘面重复出现。',
+};
 
-function cloneStoneStrings(ss: StoneStringsMap): StoneStringsMap {
-  const result: StoneStringsMap = {};
-  for (const id in ss) {
-    const s = ss[parseInt(id)];
-    result[parseInt(id)] = {
-      chiSet: new Set(s.chiSet),
-      nodes: new Set(s.nodes),
-    };
-  }
-  return result;
-}
+const colorName = (c: StoneColor) => (c === 1 ? '黑' : '白');
 
-function pushHistory(state: FullState): HistoryEntry {
+function snapshot(state: FullState): HistoryEntry {
+  // 局面在 reducer 中从不原地修改，可以直接共享引用
   return {
-    gameState: cloneGameState(state.gameState),
-    stoneStrings: cloneStoneStrings(state.stoneStrings),
-    meta: { ...state.meta },
-    moveNumbers: { ...state.moveNumbers },
+    gameState: state.gameState,
+    stoneStrings: state.stoneStrings,
+    meta: state.meta,
+    moveNumbers: state.moveNumbers,
     lastMove: state.lastMove,
     moveCount: state.moveCount,
     info: state.info,
+    hash: boardHash(state.gameState),
   };
 }
 
-function createInitialState(boardIndex: number, boards: Board[]): FullState {
+/** 本局到目前为止出现过的所有盘面（含当前） */
+export function seenBoardHashes(state: Pick<FullState, 'history' | 'gameState'>): Set<string> {
+  const seen = new Set(state.history.map((h) => h.hash));
+  seen.add(boardHash(state.gameState));
+  return seen;
+}
+
+function currentBoard(state: FullState): Board {
+  return state.allBoards[state.boardIndex] || BOARDS[0];
+}
+
+function createInitialState(
+  boardIndex: number,
+  boards: Board[],
+  prefs: Pick<FullState, 'hasFiveRule' | 'noRepeat' | 'aiEnabled'> = { hasFiveRule: false, noRepeat: true, aiEnabled: false },
+): FullState {
   const board = boards[boardIndex] || BOARDS[0];
-  const gameState = initGameState(board.adj);
   return {
     boardIndex,
-    gameState,
+    gameState: initGameState(board.adj),
     stoneStrings: initStoneStrings(),
     meta: initGameMeta(),
     info: '请点击或触摸下棋。',
-    hasFiveRule: false,
+    infoIsError: false,
     allBoards: boards,
     history: [],
     moveNumbers: {},
     lastMove: null,
     moveCount: 0,
-    boardHashes: new Set([boardHash(gameState)]),
-    noRepeat: false,
-    aiEnabled: false,
-    aiThinking: false,
+    ...prefs,
   };
 }
 
-function gameReducer(state: FullState, action: Action): FullState {
+const prefsOf = (s: FullState) => ({ hasFiveRule: s.hasFiveRule, noRepeat: s.noRepeat, aiEnabled: s.aiEnabled });
+
+export function gameReducer(state: FullState, action: Action): FullState {
   switch (action.type) {
     case 'SELECT_BOARD': {
-      const board = state.allBoards[action.index];
-      if (!board) return state;
-      return createInitialState(action.index, state.allBoards);
+      if (!state.allBoards[action.index]) return state;
+      return createInitialState(action.index, state.allBoards, prefsOf(state));
     }
 
-    case 'RESTART': {
-      const board = state.allBoards[state.boardIndex] || BOARDS[0];
-      return {
-        ...createInitialState(state.boardIndex, state.allBoards),
-      };
-    }
+    case 'RESTART':
+      return createInitialState(state.boardIndex, state.allBoards, prefsOf(state));
 
     case 'UNDO': {
       if (state.history.length === 0) return state;
@@ -156,22 +155,26 @@ function gameReducer(state: FullState, action: Action): FullState {
         lastMove: prev.lastMove,
         moveCount: prev.moveCount,
         info: '已悔棋。',
+        infoIsError: false,
         history: state.history.slice(0, -1),
       };
     }
 
     case 'PASS': {
+      if (state.meta.ended) return state;
       const meta = { ...state.meta };
       executePass(meta);
       const info = meta.ended
-        ? '双方连续放弃，本局结束。'
-        : `${oppoColor(meta.next) === 1 ? '黑' : '白'}棋放弃一手。`;
+        ? '双方连续虚手，对局结束。'
+        : `${colorName(state.meta.next)}棋虚手。`;
       return {
         ...state,
         meta,
         info,
-        history: [...state.history, pushHistory(state)],
+        infoIsError: false,
+        history: [...state.history, snapshot(state)],
         moveCount: state.moveCount + 1,
+        lastMove: null,
       };
     }
 
@@ -184,78 +187,59 @@ function gameReducer(state: FullState, action: Action): FullState {
     case 'TOGGLE_AI':
       return { ...state, aiEnabled: !state.aiEnabled };
 
-    case 'REFRESH_BOARDS':
-      return {
-        ...state,
-        allBoards: getAllBoards(),
-      };
+    case 'REFRESH_BOARDS': {
+      const allBoards = getAllBoards();
+      // 当前棋盘被删除或被改动时，回到默认棋盘重新开始
+      const before = currentBoard(state);
+      const after = allBoards[state.boardIndex];
+      if (!after || after.name !== before.name || JSON.stringify(after.adj) !== JSON.stringify(before.adj)) {
+        return createInitialState(DEFAULT_BOARD_INDEX, allBoards, prefsOf(state));
+      }
+      return { ...state, allBoards };
+    }
 
     case 'PLAY': {
-      if (state.meta.ended) return state;
-
       const { nodeID } = action;
-      const board = state.allBoards[state.boardIndex] || BOARDS[0];
+      const board = currentBoard(state);
       const color = state.meta.next;
 
-      if (state.gameState[nodeID]?.s !== 0) {
-        return { ...state, info: '这一手不合规则。' };
-      }
-
-      const gameState = cloneGameState(state.gameState);
-      const stoneStrings = cloneStoneStrings(state.stoneStrings);
-      const meta = { ...state.meta };
-
-      const valid = validWrtRuleAndUpdate(
-        board.adj, gameState, stoneStrings, meta, nodeID, color,
+      const result = tryPlay(
+        board.adj,
+        { gameState: state.gameState, stoneStrings: state.stoneStrings, meta: state.meta },
+        nodeID,
+        state.noRepeat ? seenBoardHashes(state) : null,
       );
-
-      if (!valid) {
-        return { ...state, info: '这一手不合规则。' };
+      if ('error' in result) {
+        if (result.error === 'ended') return state;
+        return { ...state, info: MOVE_ERROR_TEXT[result.error], infoIsError: true };
       }
-
-      // 禁止全同再现规则
-      if (state.noRepeat) {
-        const newHash = boardHash(gameState);
-        if (state.boardHashes.has(newHash)) {
-          return { ...state, info: '禁止全同再现（打劫规则）。' };
-        }
-      }
-
-      flipColor(meta);
-      meta.passed = 0;
+      const { gameState, stoneStrings, meta } = result.position;
 
       let info = '　';
       if (state.hasFiveRule && board.cat === 'rectangular' && board.w && board.h) {
         const fiveResult = checkFiveWinning(gameState, board.w, board.h, nodeID);
         if (fiveResult !== 0) {
-          info = `按五子棋规则，${fiveResult === 1 ? '黑' : '白'}胜。`;
+          info = `按五子棋规则，${colorName(fiveResult as StoneColor)}胜。`;
           meta.ended = true;
         }
       }
+      const captured = color === 1
+        ? meta.capturedByBlack - state.meta.capturedByBlack
+        : meta.capturedByWhite - state.meta.capturedByWhite;
+      if (info === '　' && captured > 0) info = `${colorName(color)}提${captured}子。`;
 
-      const newMoveCount = state.moveCount + 1;
-      const newMoveNumbers = { ...state.moveNumbers, [nodeID]: newMoveCount };
-
-      // 被提掉的子移除序号
-      for (const id in gameState) {
-        if (gameState[parseInt(id)].s === 0 && newMoveNumbers[parseInt(id)]) {
-          // 检查这个空点之前是否有棋子被提掉
-        }
-      }
-
+      const moveCount = state.moveCount + 1;
       return {
         ...state,
         gameState,
         stoneStrings,
         meta,
         info,
-        moveNumbers: newMoveNumbers,
+        infoIsError: false,
+        moveNumbers: { ...state.moveNumbers, [nodeID]: moveCount },
         lastMove: nodeID,
-        moveCount: newMoveCount,
-        history: [...state.history, pushHistory(state)],
-        boardHashes: state.noRepeat
-          ? new Set([...state.boardHashes, boardHash(gameState)])
-          : state.boardHashes,
+        moveCount,
+        history: [...state.history, snapshot(state)],
       };
     }
 
@@ -277,6 +261,7 @@ export interface UseGameReturn {
   boardName: string;
   allBoards: Board[];
   info: string;
+  infoIsError: boolean;
   isRectangular: boolean;
   hasFiveRule: boolean;
   moveNumbers: Record<number, number>;
@@ -299,6 +284,8 @@ export interface UseGameReturn {
   undo: () => void;
 }
 
+const AI_COLOR: StoneColor = 2;
+
 export function useGame(): UseGameReturn {
   const [state, dispatch] = useReducer(
     gameReducer,
@@ -306,7 +293,8 @@ export function useGame(): UseGameReturn {
     (idx) => createInitialState(idx, getAllBoards()),
   );
 
-  const board = state.allBoards[state.boardIndex] || BOARDS[0];
+  const board = currentBoard(state);
+  const aiThinking = state.aiEnabled && !state.meta.ended && state.meta.next === AI_COLOR;
 
   const selectBoard = useCallback((index: number) => dispatch({ type: 'SELECT_BOARD', index }), []);
   const handlePlay = useCallback((nodeID: number) => dispatch({ type: 'PLAY', nodeID }), []);
@@ -331,25 +319,15 @@ export function useGame(): UseGameReturn {
 
   // AI 对手自动落子
   useEffect(() => {
-    if (!state.aiEnabled || state.meta.ended || state.aiThinking) return;
-    // AI 执白（后手）
-    if (state.meta.next !== 2) return;
-
-    const board = (state.allBoards[state.boardIndex] || BOARDS[0]);
+    if (!aiThinking) return;
     const timer = setTimeout(() => {
       const aiMove = pickAIMove(
-        board.adj, state.gameState, state.stoneStrings, 2, board.p, DEFAULT_AI_CONFIG,
+        board.adj, state.gameState, state.stoneStrings, AI_COLOR, board.p, DEFAULT_AI_CONFIG,
       );
-      if (aiMove != null) {
-        dispatch({ type: 'PLAY', nodeID: aiMove });
-      } else {
-        // AI 无子可下，pass
-        dispatch({ type: 'PASS' });
-      }
+      dispatch(aiMove != null ? { type: 'PLAY', nodeID: aiMove } : { type: 'PASS' });
     }, DEFAULT_AI_CONFIG.thinkMs);
-
     return () => clearTimeout(timer);
-  }, [state.aiEnabled, state.meta.next, state.meta.ended, state.aiThinking, state.boardIndex, state.gameState, state.stoneStrings, state.allBoards]);
+  }, [aiThinking, board, state.gameState, state.stoneStrings]);
 
   return {
     gameState: state.gameState,
@@ -360,17 +338,18 @@ export function useGame(): UseGameReturn {
     boardName: board.name,
     allBoards: state.allBoards,
     info: state.info,
+    infoIsError: state.infoIsError,
     isRectangular: board.cat === 'rectangular',
     hasFiveRule: state.hasFiveRule,
     moveNumbers: state.moveNumbers,
     lastMove: state.lastMove,
-    canUndo: state.history.length > 0 && !state.meta.ended,
+    canUndo: state.history.length > 0,
     moveCount: state.moveCount,
     capturedBlack: state.meta.capturedByBlack,
     capturedWhite: state.meta.capturedByWhite,
     noRepeat: state.noRepeat,
     aiEnabled: state.aiEnabled,
-    aiThinking: state.aiThinking,
+    aiThinking,
     selectBoard,
     handlePlay,
     pass,
@@ -382,3 +361,6 @@ export function useGame(): UseGameReturn {
     undo,
   };
 }
+
+export { createInitialState };
+export type { FullState, Action };

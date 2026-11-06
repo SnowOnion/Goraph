@@ -62,7 +62,9 @@ test.describe('Goraph 冒烟测试', () => {
     await page.getByText('虚手', { exact: true }).click();
     await expect(turn(page)).toHaveText('白');
     await page.getByText('虚手', { exact: true }).click();
-    await expect(page.getByText('对局结束')).toBeVisible();
+    await expect(page.getByText('对局结束', { exact: true })).toBeVisible();
+    await expect(page.getByText('和棋', { exact: true })).toBeVisible();
+    await expect(page.getByText(/数子法/)).toBeVisible();
   });
 
   test('设置面板切换棋盘', async ({ page }) => {
