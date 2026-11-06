@@ -42,6 +42,7 @@ Goraph/
 │   ├── core/                  ★ 框架无关的核心逻辑（最重要）
 │   │   ├── types.ts             类型定义（Board/GameState/StoneString…）
 │   │   ├── boards.ts            预设棋盘 + 自定义棋盘加载
+│   │   ├── geometry.ts          棋子半径等几何计算
 │   │   ├── game-engine.ts       围棋引擎：气/棋串/提子/打劫/计分
 │   │   ├── five.ts              五子棋规则
 │   │   ├── editor.ts            棋盘编辑器逻辑（含 OGR 扩展点）
@@ -135,7 +136,8 @@ Taro **不会**把 `public/` 复制到 `dist/`。必须执行 `cp -r public/* di
 ### 6.1 核心逻辑与 UI 解耦
 `src/core/` 全部是纯 TypeScript，不依赖 DOM / Taro / React，可单独测试、可在小程序/Node 复用。
 - `game-engine.ts`：气数维护、棋串合并、提子、打劫检测、计分
-- `boards.ts`：7 个预设棋盘（福/玫瑰/囧/2×2/4×4/9×9/13×13）+ 自定义棋盘加载
+- `boards.ts`：10 个预设棋盘（福/玫瑰/囧/2×2/4×4/9×9/13×13/六边形/三角形/蜂巢）+ 自定义棋盘加载；晶格棋盘由 `buildHexagonBoard`/`buildTriangleBoard`/`buildHoneycombBoard` 生成，`fitPositions` 缩放到 0..1000。新预设追加到末尾，别动 `DEFAULT_BOARD_INDEX` 之前的顺序
+- `geometry.ts`：`stoneRadius` 按最短边自适应棋子半径（上限 32）
 - `storage.ts`：跨平台存储（H5 用 localStorage，小程序用 Taro API）
 
 ### 6.2 状态管理
@@ -158,7 +160,7 @@ Taro **不会**把 `public/` 复制到 `dist/`。必须执行 `cp -r public/* di
 
 ### 已完成
 - ✅ 围棋核心引擎（吃子/气/棋串/打劫/计分）
-- ✅ 7 个预设棋盘 + 自定义棋盘（编辑器）
+- ✅ 10 个预设棋盘（含六边形/三角形/蜂巢晶格）+ 自定义棋盘（编辑器）
 - ✅ 棋盘编辑器（加点/连线/移动/删除/撤销重做/保存加载）
 - ✅ 悔棋
 - ✅ 棋子序号显示（可开关）

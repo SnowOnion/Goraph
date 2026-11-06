@@ -75,6 +75,17 @@ test.describe('Goraph 冒烟测试', () => {
     expect(errors).toEqual([]);
   });
 
+  test('六边形棋盘可以落子', async ({ page }) => {
+    const errors = collectErrors(page);
+    await page.goto(GAME_URL);
+    await page.getByText('设置', { exact: true }).click();
+    await page.locator('.board-chip', { hasText: '六边形' }).click();
+    await page.locator('.settings-close').click();
+    await tapBoard(page, 500, 500);
+    await expect(turn(page)).toHaveText('白');
+    expect(errors).toEqual([]);
+  });
+
   test('编辑器页面', async ({ page }) => {
     const errors = collectErrors(page);
     await page.goto(EDITOR_URL);
