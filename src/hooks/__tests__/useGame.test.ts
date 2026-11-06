@@ -71,3 +71,20 @@ describe('gameReducer', () => {
     expect(s.meta.capturedByBlack).toBe(1);
   });
 });
+
+describe('与 AI 对局时悔棋', () => {
+  it('untilColor：一次悔到玩家回合（撤销 AI 和玩家各一手）', () => {
+    let s = run([play(0), play(15), play(1), play(14)]);
+    s = run([{ type: 'UNDO', untilColor: 1 }], s);
+    expect(s.moveCount).toBe(2);
+    expect(s.meta.next).toBe(1);
+    expect(s.gameState[1].s).toBe(0);
+  });
+
+  it('untilColor：AI 还没下时只撤销玩家一手', () => {
+    let s = run([play(0), play(15), play(1)]);
+    s = run([{ type: 'UNDO', untilColor: 1 }], s);
+    expect(s.moveCount).toBe(2);
+    expect(s.meta.next).toBe(1);
+  });
+});
