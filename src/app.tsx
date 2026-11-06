@@ -11,7 +11,7 @@ class App extends Component<PropsWithChildren> {
     if (process.env.TARO_ENV === 'h5' && 'serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker
-          .register('/sw.js')
+          .register('sw.js')
           .catch((err) => console.warn('SW registration failed:', err));
       });
     }
